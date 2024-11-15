@@ -150,16 +150,20 @@ load_in_data_post <- function(path, adult){
 
 d_juv <- load_in_data_post("../parsed-all.xlsx", adult=FALSE)
 
-d_adult <- load_in_data_post("../parsed-mother-infant.xlsx", adult=TRUE)
+d_adult <- load_in_data_post("../parsed-mother-infant.xlsx", adult=TRUE) # no values in adult
 
 d <- rbind(d_juv, d_adult)
 d <- d %>% distinct(`Follow Number`, .keep_all = TRUE)
 
 # Just to clean up
-rm(d_juv, d_adult)
+# rm(d_juv, d_adult)
 
 #library("writexl")
 #write_xlsx(d,"~/Desktop/W24/Research/OntogenyOfLocomotion/all-juve-adult_female_.xlsx")
+```
+```{r}
+length(unique(d$Name))
+write.csv(d, "../final_data.csv")
 ```
 
 ## Calculate Diversity
