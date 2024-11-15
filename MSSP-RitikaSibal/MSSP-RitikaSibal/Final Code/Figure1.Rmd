@@ -211,6 +211,10 @@ dive_d$DiversityScore <- as.numeric(dive_d$DiversityScore)
 # For InvSimpson
 #dive_d$DiversityScore[is.infinite(dive_d$DiversityScore)] <- max(dive_d$DiversityScore[!is.infinite(dive_d$DiversityScore)], na.rm = TRUE)
 ```
+```{r}
+glimpse(dive_d)
+write.csv(dive_d, "../diversity_score.csv")
+```
 
 ## GLMM Analysis
 
