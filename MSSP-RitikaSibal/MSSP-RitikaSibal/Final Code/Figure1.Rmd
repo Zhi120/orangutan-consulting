@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 # Change path to your local directory
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, comment = "##", prompt = TRUE, tidy = TRUE, tidy.opts = list(width.cutoff = 75), fig.path = "/Users/ritikasibal/Desktop/W24/Research/OntogenyOfLocomotion/Final Code/Figure1 Images/")
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, comment = "##", prompt = TRUE, tidy = TRUE, tidy.opts = list(width.cutoff = 75), fig.path = "Figure1 Images/")
 ```
 
 ## Load all the necessary libraries
@@ -37,7 +37,7 @@ This is only done once to clean the data up from how it is exported in filemaker
 
 ``` {r preprocessing_data, echo = T, results = 'hide', message=FALSE, warnings=FALSE}
 load_in_data_pre <- function(){
-    d <- read_xlsx("~/Desktop/Knott-Lab-Research/OntogenyOfLocomotion/Ritika Excel Files/Locomotion Export 15 Feb 2024.xlsx",sheet = 1, guess_max = 1048576)
+    d <- read_xlsx("../Locomotion Export 15 Feb 2024.xlsx",sheet = 1, guess_max = 1048576)
   d$Exclude <- d$Exclude %>% replace(is.na(.), 'a')
   # Remove the excluded data
   d <- subset(d, Exclude != 'E')
@@ -148,9 +148,9 @@ load_in_data_post <- function(path, adult){
   return(df)
 }
 
-d_juv <- load_in_data_post("~/Desktop/Knott-Lab-Research/OntogenyOfLocomotion/Ritika Excel Files/parsed-all.xlsx", adult=FALSE)
+d_juv <- load_in_data_post("../parsed-all.xlsx", adult=FALSE)
 
-d_adult <- load_in_data_post("~/Desktop/Knott-Lab-Research/OntogenyOfLocomotion/Ritika Excel Files/parsed-mother-infant.xlsx", adult=TRUE)
+d_adult <- load_in_data_post("../parsed-mother-infant.xlsx", adult=TRUE)
 
 d <- rbind(d_juv, d_adult)
 d <- d %>% distinct(`Follow Number`, .keep_all = TRUE)
