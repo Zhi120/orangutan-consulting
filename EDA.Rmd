@@ -1,0 +1,31 @@
+---
+title: "EDA"
+author: "Suheng Yao"
+date: "2024-11-15"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df_score <- read.csv("diversity_score.csv")
+glimpse(df_score)
+```
+```{r}
+ggplot(df_score, aes(x = DiversityScore)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "lightblue", color = "black") +
+  stat_function(fun = dnorm, args = list(mean = mean(df_score$DiversityScore, na.rm = TRUE), 
+                                         sd = sd(df_score$DiversityScore, na.rm = TRUE)),
+                color = "red", size = 1) +
+  labs(title = "Histogram of DiversityScore with Normal Curve",
+       x = "DiversityScore",
+       y = "Density")
+
+```
+```{r}
+anova_result <- aov(DiversityScore ~ Age, data = df_score)
+summary(anova_result)
+```
+
