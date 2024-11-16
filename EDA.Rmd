@@ -1,5 +1,5 @@
 ---
-title: "EDA"
+title: "EDA Report"
 author: "Suheng Yao"
 date: "2024-11-15"
 output: pdf_document
@@ -7,15 +7,22 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
 ```
 
+# Read in the dataset
 ```{r}
 library(dplyr)
 library(ggplot2)
 df_score <- read.csv("diversity_score.csv")
-glimpse(df_score)
+df <- read.csv("final_data.csv")
 ```
-```{r}
+# Part 4: ANOVA Table Analysis
+## Step 1: Check for Normality of Diversity Score
+
+```{r, warning=FALSE}
 ggplot(df_score, aes(x = DiversityScore)) +
   geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "lightblue", color = "black") +
   stat_function(fun = dnorm, args = list(mean = mean(df_score$DiversityScore, na.rm = TRUE), 
@@ -26,11 +33,15 @@ ggplot(df_score, aes(x = DiversityScore)) +
        y = "Density")
 
 ```
+Since as shown in the histogram above, the diversity score follows a close to normal distribution, we can proceed to use ANOVA table to analyze the relationship between diversity score and age.
+
 ```{r}
 anova_result <- aov(DiversityScore ~ Age, data = df_score)
 summary(anova_result)
 ```
+From the ANOVA table result, since p-value of f-test is less than 0.05, we can reject the null hypothesis, saying that there is statistically significant difference for diversity score between different age groups.
 
+Part 3
 ```{r}
 #eda 3
 ggplot(df_score, aes(x = as.factor(Age), y = DiversityScore)) +
@@ -59,6 +70,15 @@ ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
   ) +
   theme_minimal()
 ```
+The diversity score distribution is fairly consistent across age groups, with medians around a similar range.
+Age group 1 shows a wider interquartile range (IQR), indicating more variability in diversity scores compared to other age groups.
+There are a few outliers in certain age groups, notably in Age 5, which may require further investigation.
+
+The number of observations varies significantly across age groups.
+Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis.
+Age group 1 has the smallest count(about 180), which could affect the reliability of statistical summaries or models for that group.
+
+Part 5
 ```{r}
 #eda 5
 final_data_df<-read.csv("final_data.csv")
@@ -79,4 +99,31 @@ ggplot(total_minutes_awake, aes(x = as.factor(Age), y = total_minutes_awake)) +
   ) +
   theme_minimal() 
 ```
+Total minutes awake increases with age, with Age group 7 showing the highest cumulative awake time.
+The trend suggests that older individuals tend to stay awake longer, which could be a natural developmental pattern or influenced by external factors.
 
+=======
+# Part 6: Find the Number of Unique Positional Behaviors for Each Age Group
+```{r}
+result <- df %>%
+  pivot_longer(cols = 7:ncol(df),
+               names_to = "Behavior", 
+               values_to = "Value") %>%
+  filter(Value != 0.0)
+
+result <- result %>%
+  group_by(Age) %>%
+  summarise(PB_count = n_distinct(Behavior)) %>%
+  arrange(desc(PB_count))
+
+ggplot(result, aes(x=Age, y=PB_count)) +
+  geom_line() +
+  geom_point(color = "blue", size = 3) +
+  theme_minimal()
+
+print(result)
+```
+From the table above, Age 4 group has 68 kinds of positional behaviors, which is the most number of distinct positional behaviors across all age groups. Age 1 group has only 49 kinds of positional behaviors, which is the least number of distinct behaviour among 7 groups.
+
+Also, from the line graph, starting from age 2 to 4, there is a surge in the number of kinds of positional behaviors, and after year 4, there is a significant decrease in number of positional behaviors, which means that year 4 is an important time point to focus on.
+>>>>>>> d5cdeda2ac6d616297fb33bd31818e12514a9433
