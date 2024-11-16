@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(dplyr)
+library(ggplot2)
 df_score <- read.csv("diversity_score.csv")
 glimpse(df_score)
 ```
@@ -27,5 +29,54 @@ ggplot(df_score, aes(x = DiversityScore)) +
 ```{r}
 anova_result <- aov(DiversityScore ~ Age, data = df_score)
 summary(anova_result)
+```
+
+```{r}
+#eda 3
+ggplot(df_score, aes(x = as.factor(Age), y = DiversityScore)) +
+  geom_boxplot(fill = "orange", alpha = 0.7) + # Box plot with a skyblue fill
+  labs(
+    title = "Box Plot of Diversity Score by Age",
+    x = "Age Group",
+    y = "Diversity Score"
+  ) +
+  theme_minimal() 
+
+age_counts <- df_score %>%
+  group_by(Age) %>%
+  summarise(count = n()) # Count the number of rows for each age
+
+# Print the counts to the console
+print(age_counts)
+
+# Create a bar plot for the count of observations by age
+ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
+  geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) + # Bar plot
+  labs(
+    title = "Count of Observations by Age",
+    x = "Age Group",
+    y = "Number of Observations"
+  ) +
+  theme_minimal()
+```
+```{r}
+#eda 5
+final_data_df<-read.csv("final_data.csv")
+total_minutes_awake <- final_data_df %>%
+  group_by(Age) %>%
+  summarise(total_minutes_awake = sum(Minutes.awake, na.rm = TRUE)) # Sum of minutes awake
+
+# Print the total minutes awake for each age
+print(total_minutes_awake)
+
+# Create a bar plot to show the distribution of total minutes awake by age
+ggplot(total_minutes_awake, aes(x = as.factor(Age), y = total_minutes_awake)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) + # Bar plot
+  labs(
+    title = "Total Minutes Awake by Age Group",
+    x = "Age Group",
+    y = "Total Minutes Awake"
+  ) +
+  theme_minimal() 
 ```
 
