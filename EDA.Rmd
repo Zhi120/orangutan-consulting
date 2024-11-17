@@ -19,6 +19,76 @@ library(ggplot2)
 df_score <- read.csv("diversity_score.csv")
 df <- read.csv("final_data.csv")
 ```
+
+
+#Part 1: Max and Min minutes of awake time for each orangutans.
+```{r}
+#select the max and min awake minutes by names
+awake <- d %>%
+  group_by(Name) %>%
+  summarise(
+    max_minutes_awake = max(`Minutes awake`, na.rm = TRUE),
+    min_minutes_awake = min(`Minutes awake`, na.rm = TRUE)
+  )
+print(awake)
+
+# visualization
+ggplot(awake, aes(x = Name)) +
+  geom_segment(aes(xend = Name, y = min_minutes_awake, yend = max_minutes_awake), color = "gray") +
+  geom_point(aes(y = max_minutes_awake, color = "Max Minutes Awake"), size = 3) +
+  geom_point(aes(y = min_minutes_awake, color = "Min Minutes Awake"), size = 3) +
+  scale_color_manual(values = c("Max Minutes Awake" = "skyblue", "Min Minutes Awake" = "#F3A683")) +
+  theme_minimal() +
+  labs(
+    title = "Max and Min Minutes Awake for Each Orangutan",
+    x = "Orangutan Name",
+    y = "Minutes Awake",
+    color = "Legend"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 2),
+    plot.title = element_text(size = 14),
+    axis.title = element_text(size = 12)
+  ) +
+  coord_cartesian(clip = "off") 
+```
+
+
+#Part 2: Visualization of diversity score
+```{r}
+# Boxplot
+ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
+  geom_boxplot(fill = "skyblue", color = "#6495ED", outlier.colour = "red", outlier.size = 3, alpha=0.7) +
+  labs(
+    title = "Boxplot of DiversityScore by Age",
+    x = "Age",
+    y = "DiversityScore"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12), axis.title = element_text(size = 14))
+
+
+# Violinplot
+ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
+  geom_violin(fill = "#F3A683", color = "#E67F00", alpha=0.7) +
+  labs(
+    title = "Violinplot of DiversityScore by Age",
+    x = "Age",
+    y = "DiversityScore"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12), axis.title = element_text(size = 14))
+```
+The boxplot shows that the median of Diversity Score increases slightly with Age, especially from Age group 1 to Age group 2. Then the trend leveled off and the median for all age groups remained at about 1.5. There are two outliers which appeared in Age 3 and Age 5 groups.
+
+In the violinplot, the similar width of the violin illustrates that the sample size is relatively balanced across age groups due to, there is no particularly small or large sample group.
+
+It also shows that the Diversity Score for all age groups was roughly distributed between 0 and 3. Most observations are concentrated between 1 and 2. The distribution shape showed bimodal characteristics, especially in Age 1 group. The data in Age 1 group were dispersed to a large extent, and the "waist" of the violin plot showed obvious bimodal distribution.
+
+In addition, as the Age get older, the variability of the data seems to decrease and the distribution becomes more concentrated. 
+
+
+
 # Part 4: ANOVA Table Analysis
 ## Step 1: Check for Normality of Diversity Score
 
