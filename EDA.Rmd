@@ -14,6 +14,8 @@ library(tidyr)
 
 # Read in the dataset
 ```{r}
+library(dplyr)
+library(ggplot2)
 df_score <- read.csv("diversity_score.csv")
 df <- read.csv("final_data.csv")
 ```
@@ -39,6 +41,68 @@ summary(anova_result)
 ```
 From the ANOVA table result, since p-value of f-test is less than 0.05, we can reject the null hypothesis, saying that there is statistically significant difference for diversity score between different age groups.
 
+Part 3
+```{r}
+#eda 3
+ggplot(df_score, aes(x = as.factor(Age), y = DiversityScore)) +
+  geom_boxplot(fill = "orange", alpha = 0.7) + # Box plot with a skyblue fill
+  labs(
+    title = "Box Plot of Diversity Score by Age",
+    x = "Age Group",
+    y = "Diversity Score"
+  ) +
+  theme_minimal() 
+
+age_counts <- df_score %>%
+  group_by(Age) %>%
+  summarise(count = n()) # Count the number of rows for each age
+
+# Print the counts to the console
+print(age_counts)
+
+# Create a bar plot for the count of observations by age
+ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
+  geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) + # Bar plot
+  labs(
+    title = "Count of Observations by Age",
+    x = "Age Group",
+    y = "Number of Observations"
+  ) +
+  theme_minimal()
+```
+The diversity score distribution is fairly consistent across age groups, with medians around a similar range.
+Age group 1 shows a wider interquartile range (IQR), indicating more variability in diversity scores compared to other age groups.
+There are a few outliers in certain age groups, notably in Age 5, which may require further investigation.
+
+The number of observations varies significantly across age groups.
+Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis.
+Age group 1 has the smallest count(about 180), which could affect the reliability of statistical summaries or models for that group.
+
+Part 5
+```{r}
+#eda 5
+final_data_df<-read.csv("final_data.csv")
+total_minutes_awake <- final_data_df %>%
+  group_by(Age) %>%
+  summarise(total_minutes_awake = sum(Minutes.awake, na.rm = TRUE)) # Sum of minutes awake
+
+# Print the total minutes awake for each age
+print(total_minutes_awake)
+
+# Create a bar plot to show the distribution of total minutes awake by age
+ggplot(total_minutes_awake, aes(x = as.factor(Age), y = total_minutes_awake)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) + # Bar plot
+  labs(
+    title = "Total Minutes Awake by Age Group",
+    x = "Age Group",
+    y = "Total Minutes Awake"
+  ) +
+  theme_minimal() 
+```
+Total minutes awake increases with age, with Age group 7 showing the highest cumulative awake time.
+The trend suggests that older individuals tend to stay awake longer, which could be a natural developmental pattern or influenced by external factors.
+
+=======
 # Part 6: Find the Number of Unique Positional Behaviors for Each Age Group
 ```{r}
 result <- df %>%
@@ -62,3 +126,4 @@ print(result)
 From the table above, Age 4 group has 68 kinds of positional behaviors, which is the most number of distinct positional behaviors across all age groups. Age 1 group has only 49 kinds of positional behaviors, which is the least number of distinct behaviour among 7 groups.
 
 Also, from the line graph, starting from age 2 to 4, there is a surge in the number of kinds of positional behaviors, and after year 4, there is a significant decrease in number of positional behaviors, which means that year 4 is an important time point to focus on.
+>>>>>>> d5cdeda2ac6d616297fb33bd31818e12514a9433
