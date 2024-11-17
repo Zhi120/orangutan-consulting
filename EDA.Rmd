@@ -114,18 +114,6 @@ From the ANOVA table result, since p-value of f-test is less than 0.05, we can r
 Part 3
 ```{r}
 #eda 3
-ggplot(df_score, aes(x = as.factor(Age), y = DiversityScore)) +
-  geom_boxplot(fill = "orange", alpha = 0.7) + # Box plot with a skyblue fill
-  labs(
-    title = "Box Plot of Diversity Score by Age",
-    x = "Age Group",
-    y = "Diversity Score"
-  ) +
-  theme_minimal() 
-
-age_counts <- df_score %>%
-  group_by(Age) %>%
-  summarise(count = n()) # Count the number of rows for each age
 
 # Print the counts to the console
 print(age_counts)
@@ -140,9 +128,6 @@ ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
   ) +
   theme_minimal()
 ```
-The diversity score distribution is fairly consistent across age groups, with medians around a similar range.
-Age group 1 shows a wider interquartile range (IQR), indicating more variability in diversity scores compared to other age groups.
-There are a few outliers in certain age groups, notably in Age 5, which may require further investigation.
 
 The number of observations varies significantly across age groups.
 Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis.
