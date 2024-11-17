@@ -45,6 +45,8 @@ Part 3
 ```{r}
 #eda 3
 
+# Print the counts to the console
+print(age_counts)
 
 # Create a bar plot for the count of observations by age
 ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
@@ -56,9 +58,6 @@ ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
   ) +
   theme_minimal()
 ```
-The diversity score distribution is fairly consistent across age groups, with medians around a similar range.
-Age group 1 shows a wider interquartile range (IQR), indicating more variability in diversity scores compared to other age groups.
-There are a few outliers in certain age groups, notably in Age 5, which may require further investigation.
 
 The number of observations varies significantly across age groups.
 Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis.
