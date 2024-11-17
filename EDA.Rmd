@@ -44,21 +44,7 @@ From the ANOVA table result, since p-value of f-test is less than 0.05, we can r
 Part 3
 ```{r}
 #eda 3
-ggplot(df_score, aes(x = as.factor(Age), y = DiversityScore)) +
-  geom_boxplot(fill = "orange", alpha = 0.7) + # Box plot with a skyblue fill
-  labs(
-    title = "Box Plot of Diversity Score by Age",
-    x = "Age Group",
-    y = "Diversity Score"
-  ) +
-  theme_minimal() 
 
-age_counts <- df_score %>%
-  group_by(Age) %>%
-  summarise(count = n()) # Count the number of rows for each age
-
-# Print the counts to the console
-print(age_counts)
 
 # Create a bar plot for the count of observations by age
 ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
