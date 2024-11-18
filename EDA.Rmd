@@ -1,6 +1,6 @@
 ---
 title: "EDA Report"
-author: "Suheng Yao"
+author: "Xiaohan Shi, Zihao Zhang, Suheng Yao"
 date: "2024-11-15"
 output: pdf_document
 ---
@@ -21,9 +21,9 @@ df <- read.csv("final_data.csv")
 ```
 
 
-#Part 1: The distribution of Minutes Awake.
+# Part 1: The Distribution of Minutes Awake
 ```{r}
-ggplot(d, aes(x = `Minutes awake`)) +
+ggplot(df, aes(x = `Minutes.awake`)) +
   geom_histogram(binwidth = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   labs(
     title = "Distribution of Minutes Awake",
@@ -38,11 +38,13 @@ ggplot(d, aes(x = `Minutes awake`)) +
 ```
 
 
-#Part 2: Visualization of diversity score
+# Part 2: Visualization of Diversity Score
 ```{r}
 # Boxplot
-ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
-  geom_boxplot(fill = "skyblue", color = "#6495ED", outlier.colour = "red", outlier.size = 3, alpha=0.7) +
+ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
+  geom_boxplot(fill = "skyblue", color = "#6495ED", 
+               outlier.colour = "red", outlier.size = 3, 
+               alpha=0.7) +
   labs(
     title = "Boxplot of DiversityScore by Age",
     x = "Age",
@@ -53,7 +55,7 @@ ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
 
 
 # Violinplot
-ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
+ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
   geom_violin(fill = "#F3A683", color = "#E67F00", alpha=0.7) +
   labs(
     title = "Violinplot of DiversityScore by Age",
@@ -69,9 +71,9 @@ In the violinplot, the similar width of the violin illustrates that the sample s
 
 It also shows that the Diversity Score for all age groups was roughly distributed between 0 and 3. The distribution of Diversity score in group 2-7 are similar that most observations are concentrated between 1 and 2. The data in Age 1 group are dispersed to a large extent, which is from 0 to 2.5.
 
-In addition, as the Age get older, the variability of the data seems to decrease and the distribution becomes more concentrated. 
+In addition, as the age get older, the variability of the data seems to decrease and the distribution becomes more concentrated. 
 
-Part 3
+# Part 3: Diversity Score Statistics
 ```{r}
 #eda 3
 diversity_stats <- df_score %>%
@@ -131,7 +133,7 @@ From the ANOVA table result, since p-value of f-test is less than 0.05, we can r
 
 
 
-Part 5
+# Part 5: Distribution of Total Minutes Awake
 ```{r}
 #eda 5
 final_data_df<-read.csv("final_data.csv")
@@ -162,7 +164,6 @@ ggplot(average_minutes_awake, aes(x = factor(Age), y = avg_minutes_awake)) +
   theme_minimal() +
   theme( ) 
 ```
-
 The average minutes awake is relatively consistent across all age groups, hovering around 630–660 minutes.
 There is no significant increase or decrease in the average minutes awake as age increases, suggesting that wakefulness may not be strongly age-dependent within this dataset.
 
