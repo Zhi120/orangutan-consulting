@@ -178,9 +178,10 @@ ggplot(average_minutes_awake, aes(x = factor(Age), y = avg_minutes_awake)) +
   theme_minimal() +
   theme( ) 
 ```
+
 The average minutes awake is relatively consistent across all age groups, hovering around 630–660 minutes.
 There is no significant increase or decrease in the average minutes awake as age increases, suggesting that wakefulness may not be strongly age-dependent within this dataset.
-=======
+
 # Part 6: Find the Number of Unique Positional Behaviors for Each Age Group
 ```{r}
 result <- df %>%
@@ -203,5 +204,4 @@ print(result)
 ```
 From the table above, Age 4 group has 68 kinds of positional behaviors, which is the most number of distinct positional behaviors across all age groups. Age 1 group has only 49 kinds of positional behaviors, which is the least number of distinct behaviour among 7 groups.
 
-Also, from the line graph, starting from age 2 to 4, there is a surge in the number of kinds of positional behaviors, and after year 4, there is a significant decrease in number of positional behaviors, which means that year 4 is an important time point to focus on.
->>>>>>> d5cdeda2ac6d616297fb33bd31818e12514a9433
+Also, from the line graph, starting from age 2 to 4, there is a surge in the number of distinct positional behaviors, and after year 4, there is a significant decrease in number of positional behaviors, which means that year 4 is an important time point to focus on.
