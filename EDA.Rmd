@@ -21,36 +21,20 @@ df <- read.csv("final_data.csv")
 ```
 
 
-#Part 1: Max and Min minutes of awake time for each orangutans.
+#Part 1: The distribution of Minutes Awake.
 ```{r}
-#select the max and min awake minutes by names
-awake <- d %>%
-  group_by(Name) %>%
-  summarise(
-    max_minutes_awake = max(`Minutes awake`, na.rm = TRUE),
-    min_minutes_awake = min(`Minutes awake`, na.rm = TRUE)
-  )
-print(awake)
-
-# visualization
-ggplot(awake, aes(x = Name)) +
-  geom_segment(aes(xend = Name, y = min_minutes_awake, yend = max_minutes_awake), color = "gray") +
-  geom_point(aes(y = max_minutes_awake, color = "Max Minutes Awake"), size = 3) +
-  geom_point(aes(y = min_minutes_awake, color = "Min Minutes Awake"), size = 3) +
-  scale_color_manual(values = c("Max Minutes Awake" = "skyblue", "Min Minutes Awake" = "#F3A683")) +
-  theme_minimal() +
+ggplot(d, aes(x = `Minutes awake`)) +
+  geom_histogram(binwidth = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   labs(
-    title = "Max and Min Minutes Awake for Each Orangutan",
-    x = "Orangutan Name",
-    y = "Minutes Awake",
-    color = "Legend"
+    title = "Distribution of Minutes Awake",
+    x = "Minutes Awake",
+    y = "Frequency"
   ) +
+  theme_minimal(base_size = 15) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 2),
-    plot.title = element_text(size = 14),
-    axis.title = element_text(size = 12)
-  ) +
-  coord_cartesian(clip = "off") 
+    axis.text = element_text(size = 12),
+    plot.title = element_text(size = 18, face = "bold")
+  )
 ```
 
 
@@ -83,7 +67,7 @@ The boxplot shows that the median of Diversity Score increases slightly with Age
 
 In the violinplot, the similar width of the violin illustrates that the sample size is relatively balanced across age groups due to, there is no particularly small or large sample group.
 
-It also shows that the Diversity Score for all age groups was roughly distributed between 0 and 3. Most observations are concentrated between 1 and 2. The distribution shape showed bimodal characteristics, especially in Age 1 group. The data in Age 1 group were dispersed to a large extent, and the "waist" of the violin plot showed obvious bimodal distribution.
+It also shows that the Diversity Score for all age groups was roughly distributed between 0 and 3. The distribution of Diversity score in group 2-7 are similar that most observations are concentrated between 1 and 2. The data in Age 1 group are dispersed to a large extent, which is from 0 to 2.5.
 
 In addition, as the Age get older, the variability of the data seems to decrease and the distribution becomes more concentrated. 
 
