@@ -24,5 +24,4 @@ In this report, we will mainly talk about the basic EDA to analyze the data, the
 The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
-jijnsnkknfknknfkdnfkdjf
 
