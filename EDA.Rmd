@@ -87,7 +87,41 @@ It also shows that the Diversity Score for all age groups was roughly distribute
 
 In addition, as the Age get older, the variability of the data seems to decrease and the distribution becomes more concentrated. 
 
+Part 3
+```{r}
+#eda 3
+diversity_stats <- df_score %>%
+  group_by(Age) %>%
+  summarise(
+    Min = min(DiversityScore, na.rm = TRUE),
+    Max = max(DiversityScore, na.rm = TRUE),
+    Median = median(DiversityScore, na.rm = TRUE),
+    Mean = mean(DiversityScore, na.rm = TRUE),
+    SD = sd(DiversityScore, na.rm = TRUE) # Standard deviation
+  )
 
+# Print the summary statistics
+print(diversity_stats)
+age_counts <- df_score %>%
+  group_by(Age) %>%
+  summarise(count = n())
+# Print the counts to the console
+print(age_counts)
+
+# Create a bar plot for the count of observations by age
+ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
+  geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) + # Bar plot
+  labs(
+    title = "Count of Observations by Age",
+    x = "Age Group",
+    y = "Number of Observations"
+  ) +
+  theme_minimal()
+```
+
+The number of observations varies significantly across age groups.
+Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis.
+Age group 1 has the smallest count(about 180), which could affect the reliability of statistical summaries or models for that group.
 
 # Part 4: ANOVA Table Analysis
 ## Step 1: Check for Normality of Diversity Score
@@ -111,27 +145,7 @@ summary(anova_result)
 ```
 From the ANOVA table result, since p-value of f-test is less than 0.05, we can reject the null hypothesis, saying that there is statistically significant difference for diversity score between different age groups.
 
-Part 3
-```{r}
-#eda 3
 
-# Print the counts to the console
-print(age_counts)
-
-# Create a bar plot for the count of observations by age
-ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
-  geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) + # Bar plot
-  labs(
-    title = "Count of Observations by Age",
-    x = "Age Group",
-    y = "Number of Observations"
-  ) +
-  theme_minimal()
-```
-
-The number of observations varies significantly across age groups.
-Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis.
-Age group 1 has the smallest count(about 180), which could affect the reliability of statistical summaries or models for that group.
 
 Part 5
 ```{r}
@@ -144,19 +158,29 @@ total_minutes_awake <- final_data_df %>%
 # Print the total minutes awake for each age
 print(total_minutes_awake)
 
+average_minutes_awake <- final_data_df %>%
+  group_by(Age) %>%
+  summarise(
+    total_minutes_awake = sum(Minutes.awake, na.rm = TRUE), # Total minutes awake
+    age_count = n() # Count of observations per age
+  ) %>%
+  mutate(avg_minutes_awake = total_minutes_awake / age_count)
+print(average_minutes_awake)
+str(average_minutes_awake)
 # Create a bar plot to show the distribution of total minutes awake by age
-ggplot(total_minutes_awake, aes(x = as.factor(Age), y = total_minutes_awake)) +
+ggplot(average_minutes_awake, aes(x = factor(Age), y = avg_minutes_awake)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) + # Bar plot
   labs(
-    title = "Total Minutes Awake by Age Group",
+    title = "Average Minutes Awake by Age Group",
     x = "Age Group",
-    y = "Total Minutes Awake"
+    y = "Average Minutes Awake"
   ) +
-  theme_minimal() 
+  theme_minimal() +
+  theme( ) 
 ```
-Total minutes awake increases with age, with Age group 7 showing the highest cumulative awake time.
-The trend suggests that older individuals tend to stay awake longer, which could be a natural developmental pattern or influenced by external factors.
 
+The average minutes awake is relatively consistent across all age groups, hovering around 630–660 minutes.
+There is no significant increase or decrease in the average minutes awake as age increases, suggesting that wakefulness may not be strongly age-dependent within this dataset.
 
 # Part 6: Find the Number of Unique Positional Behaviors for Each Age Group
 ```{r}
