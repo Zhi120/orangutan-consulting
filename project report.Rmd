@@ -19,7 +19,7 @@ Each orangutan was observed for a period of time at different times, and the tim
 In this report, we will mainly talk about the basic EDA to analyze the data, the methods used to assess the relationship, including the models used, and finally the conclusion based on the results.
 
 # Method
-# How does Shannon Weaver Index calculate?
+## How does Shannon Weaver Index calculate?
 
 The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
