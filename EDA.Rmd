@@ -20,6 +20,9 @@ df_score <- read.csv("diversity_score.csv")
 df <- read.csv("final_data.csv")
 ```
 
+# Some Data Description
+
+The client divided all the ages into 7 groups. In the original dataset, if the age is between 0 to 2, then those orangutans are classified as age level 1; if the age is between 2 to 4, then those orangutans are classified as age level 2; if the age is between 4 to 6, then those orangutans are classified as age level 3; if the age is between 6 to 8, then those orangutans are classified as age level 4; if the age is between 8 to 10, then those orangutans are classified as age level 5; if the age is between 10 to 12, then those orangutans are classified as age level 5. For those with ages greater than 12, they go to the age 7 group.
 
 # Part 1: The Distribution of Minutes Awake
 ```{r}
