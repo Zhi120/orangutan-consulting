@@ -99,9 +99,23 @@ print(age_counts)
 
 # Create a bar plot for the count of observations by age
 ggplot(age_counts, aes(x = as.factor(Age), y = count)) +
-  geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) + # Bar plot
+  geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) +
   labs(
     title = "Count of Observations by Age",
+    x = "Age Group",
+    y = "Number of Observations"
+  ) +
+  theme_minimal()
+```
+```{r}
+age_counts1 <- df_score %>%
+  group_by(Age) %>%
+  summarise(count = n_distinct(Name))
+print(age_counts1)
+ggplot(age_counts1, aes(x = as.factor(Age), y = count)) +
+  geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) +
+  labs(
+    title = "Count of Distinct Orangutans by Age",
     x = "Age Group",
     y = "Number of Observations"
   ) +
