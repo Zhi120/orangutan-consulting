@@ -93,14 +93,6 @@ print(diversity_stats)
 age_counts <- df_score %>%
   group_by(Age) %>%
   summarise(count = n())
-<<<<<<< HEAD
-# Print the counts to the console
-print(age_counts)
-age_ranges <- c("0~2", "2~4", "4~6", "6~8", 
-                "8~10", "10~12", ">12")
-=======
-
->>>>>>> 7263db13fc94ede15b564e79a7d2583c7ada47a2
 # Create a bar plot for the count of observations by age
 ggplot(age_counts, aes(x = factor(Age, labels = age_ranges), y = count)) +
   geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) +
@@ -111,12 +103,8 @@ ggplot(age_counts, aes(x = factor(Age, labels = age_ranges), y = count)) +
   ) +
   theme_minimal()
 ```
-<<<<<<< HEAD
-```{r}
 
-=======
 ```{r, echo=FALSE}
->>>>>>> 7263db13fc94ede15b564e79a7d2583c7ada47a2
 age_counts1 <- df_score %>%
   group_by(Age) %>%
   summarise(count = n_distinct(Name))
