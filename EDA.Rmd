@@ -14,18 +14,16 @@ library(tidyr)
 
 # Read in the dataset
 ```{r}
-library(dplyr)
-library(ggplot2)
 df_score <- read.csv("diversity_score.csv")
 df <- read.csv("final_data.csv")
 ```
 
 # Some Data Description
 
-The client divided all the ages into 7 groups. In the original dataset, if the age is between 0 to 2, then those orangutans are classified as age level 1; if the age is between 2 to 4, then those orangutans are classified as age level 2; if the age is between 4 to 6, then those orangutans are classified as age level 3; if the age is between 6 to 8, then those orangutans are classified as age level 4; if the age is between 8 to 10, then those orangutans are classified as age level 5; if the age is between 10 to 12, then those orangutans are classified as age level 5. For those with ages greater than 12, they go to the age 7 group.
+The client divided all the ages into 7 groups. In the original dataset, if the age is between 0 to 2, then those orangutans are classified as age level 1; if the age is between 2 to 4, then those orangutans are classified as age level 2; if the age is between 4 to 6, then those orangutans are classified as age level 3; if the age is between 6 to 8, then those orangutans are classified as age level 4; if the age is between 8 to 10, then those orangutans are classified as age level 5; if the age is between 10 to 12, then those orangutans are classified as age level 5. For those with ages greater than 12, they go to the age 7 group. Also, all the minutes awake are greater than 360 minutes.
 
 # Part 1: The Distribution of Minutes Awake
-```{r}
+```{r, echo=FALSE}
 ggplot(df, aes(x = `Minutes.awake`)) +
   geom_histogram(binwidth = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   labs(
@@ -42,15 +40,16 @@ ggplot(df, aes(x = `Minutes.awake`)) +
 
 
 # Part 2: Visualization of Diversity Score
-```{r}
+```{r, echo=FALSE}
+age_ranges <- c("0-2", "2-4", "4-6", "6-8", "8-10", "10-12", ">12")
 # Boxplot
-ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
+ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) +
   geom_boxplot(fill = "skyblue", color = "#6495ED", 
                outlier.colour = "red", outlier.size = 3, 
                alpha=0.7) +
   labs(
     title = "Boxplot of DiversityScore by Age",
-    x = "Age",
+    x = "Age Group",
     y = "DiversityScore"
   ) +
   theme_minimal() +
@@ -58,11 +57,11 @@ ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
 
 
 # Violinplot
-ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
+ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) +
   geom_violin(fill = "#F3A683", color = "#E67F00", alpha=0.7) +
   labs(
     title = "Violinplot of DiversityScore by Age",
-    x = "Age",
+    x = "Age Group",
     y = "DiversityScore"
   ) +
   theme_minimal() +
@@ -77,7 +76,7 @@ It also shows that the Diversity Score for all age groups was roughly distribute
 In addition, as the age get older, the variability of the data seems to decrease and the distribution becomes more concentrated. 
 
 # Part 3: Diversity Score Statistics
-```{r}
+```{r, echo=FALSE}
 #eda 3
 diversity_stats <- df_score %>%
   group_by(Age) %>%
@@ -94,10 +93,14 @@ print(diversity_stats)
 age_counts <- df_score %>%
   group_by(Age) %>%
   summarise(count = n())
+<<<<<<< HEAD
 # Print the counts to the console
 print(age_counts)
 age_ranges <- c("0~2", "2~4", "4~6", "6~8", 
                 "8~10", "10~12", ">12")
+=======
+
+>>>>>>> 7263db13fc94ede15b564e79a7d2583c7ada47a2
 # Create a bar plot for the count of observations by age
 ggplot(age_counts, aes(x = factor(Age, labels = age_ranges), y = count)) +
   geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) +
@@ -108,8 +111,12 @@ ggplot(age_counts, aes(x = factor(Age, labels = age_ranges), y = count)) +
   ) +
   theme_minimal()
 ```
+<<<<<<< HEAD
 ```{r}
 
+=======
+```{r, echo=FALSE}
+>>>>>>> 7263db13fc94ede15b564e79a7d2583c7ada47a2
 age_counts1 <- df_score %>%
   group_by(Age) %>%
   summarise(count = n_distinct(Name))
@@ -131,7 +138,7 @@ Age group 1 has the smallest count(about 180), which could affect the reliabilit
 # Part 4: ANOVA Table Analysis
 ## Step 1: Check for Normality of Diversity Score
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, echo=FALSE}
 ggplot(df_score, aes(x = DiversityScore)) +
   geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "lightblue", color = "black") +
   stat_function(fun = dnorm, args = list(mean = mean(df_score$DiversityScore, na.rm = TRUE), 
@@ -144,7 +151,7 @@ ggplot(df_score, aes(x = DiversityScore)) +
 ```
 Since as shown in the histogram above, the diversity score follows a close to normal distribution, we can proceed to use ANOVA table to analyze the relationship between diversity score and age.
 
-```{r}
+```{r, echo=FALSE}
 anova_result <- aov(DiversityScore ~ Age, data = df_score)
 summary(anova_result)
 ```
@@ -153,15 +160,12 @@ From the ANOVA table result, since p-value of f-test is less than 0.05, we can r
 
 
 # Part 5: Distribution of Total Minutes Awake
-```{r}
+```{r, echo=FALSE}
 #eda 5
 final_data_df<-read.csv("final_data.csv")
 total_minutes_awake <- final_data_df %>%
   group_by(Age) %>%
-  summarise(total_minutes_awake = sum(Minutes.awake, na.rm = TRUE)) # Sum of minutes awake
-
-# Print the total minutes awake for each age
-print(total_minutes_awake)
+  summarise(total_minutes_awake = sum(Minutes.awake, na.rm = TRUE)) 
 
 average_minutes_awake <- final_data_df %>%
   group_by(Age) %>%
@@ -170,10 +174,8 @@ average_minutes_awake <- final_data_df %>%
     age_count = n() # Count of observations per age
   ) %>%
   mutate(avg_minutes_awake = total_minutes_awake / age_count)
-print(average_minutes_awake)
-str(average_minutes_awake)
 # Create a bar plot to show the distribution of total minutes awake by age
-ggplot(average_minutes_awake, aes(x = factor(Age), y = avg_minutes_awake)) +
+ggplot(average_minutes_awake, aes(x = factor(Age, labels = age_ranges), y = avg_minutes_awake)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) + # Bar plot
   labs(
     title = "Average Minutes Awake by Age Group",
@@ -187,7 +189,7 @@ The average minutes awake is relatively consistent across all age groups, hoveri
 There is no significant increase or decrease in the average minutes awake as age increases, suggesting that wakefulness may not be strongly age-dependent within this dataset.
 
 # Part 6: Find the Number of Unique Positional Behaviors for Each Age Group
-```{r}
+```{r, echo=FALSE}
 result <- df %>%
   pivot_longer(cols = 7:ncol(df),
                names_to = "Behavior", 
@@ -202,6 +204,11 @@ result <- result %>%
 ggplot(result, aes(x=Age, y=PB_count)) +
   geom_line() +
   geom_point(color = "blue", size = 3) +
+  labs(
+    title = "Distinct Count of Positional Behaviors in Each Age Group",
+    x = "Age Group",
+    y = "Count of Positional Behaviors"
+  ) +
   theme_minimal()
 
 print(result)
