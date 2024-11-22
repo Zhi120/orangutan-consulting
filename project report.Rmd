@@ -25,7 +25,7 @@ The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
 
-
+#Anova moodel
 ```{r}
 model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
 summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
@@ -42,7 +42,7 @@ anova(model.2,model.3)
 
 
 ```
-
+#Assumptions
 ```{r}
 residuals_model <- residuals(model.1, type = "pearson")
 
