@@ -23,7 +23,7 @@ df <- read.csv("final_data.csv")
 
 #Part 1: The distribution of Minutes Awake.
 ```{r}
-ggplot(d, aes(x = `Minutes awake`)) +
+ggplot(df, aes(x = `Minutes.awake`)) +
   geom_histogram(binwidth = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   labs(
     title = "Distribution of Minutes Awake",
@@ -41,7 +41,7 @@ ggplot(d, aes(x = `Minutes awake`)) +
 #Part 2: Visualization of diversity score
 ```{r}
 # Boxplot
-ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
+ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
   geom_boxplot(fill = "skyblue", color = "#6495ED", outlier.colour = "red", outlier.size = 3, alpha=0.7) +
   labs(
     title = "Boxplot of DiversityScore by Age",
@@ -53,7 +53,7 @@ ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
 
 
 # Violinplot
-ggplot(dive_d, aes(x = factor(Age), y = DiversityScore)) +
+ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
   geom_violin(fill = "#F3A683", color = "#E67F00", alpha=0.7) +
   labs(
     title = "Violinplot of DiversityScore by Age",
@@ -189,3 +189,5 @@ print(result)
 From the table above, Age 4 group has 68 kinds of positional behaviors, which is the most number of distinct positional behaviors across all age groups. Age 1 group has only 49 kinds of positional behaviors, which is the least number of distinct behaviour among 7 groups.
 
 Also, from the line graph, starting from age 2 to 4, there is a surge in the number of distinct positional behaviors, and after year 4, there is a significant decrease in number of positional behaviors, which means that year 4 is an important time point to focus on.
+
+

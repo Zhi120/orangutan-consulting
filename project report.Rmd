@@ -25,3 +25,34 @@ The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
 
+
+3. Prediction check
+```{r}
+#run the model
+model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+
+# get model predictions (include random effect)
+predicted_values <- predict(model.3, type = "response")
+
+# 实际值
+actual_values <- df_score$DiversityScore
+
+# 均方误差
+MSE <- mean((actual_values - predicted_values)^2)
+print(MSE)
+
+# use R-square
+library(performance)
+r2 <- r2(model.3)
+print(r2)
+
+#using plot
+ggplot(df_score, aes(x = actual_values, y = predicted_values)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Actual vs Predicted DiversityScore",
+       x = "Actual DiversityScore",
+       y = "Predicted DiversityScore") +
+  theme_minimal()
+
+```
