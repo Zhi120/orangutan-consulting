@@ -251,6 +251,7 @@ summary_df[nrow(summary_df) + 1,] = c('Gaussian Log Age^2', summary(model.3)$AIC
 #grid.table(summary_df)
 
 model <- model.3
+rownames(summary_df) <- NULL
 ```
 
 ## Analyse the GLMM
