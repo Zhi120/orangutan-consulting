@@ -20,10 +20,15 @@ df <- read.csv("final_data.csv")
 
 # Some Data Description
 
+<<<<<<< HEAD
+#Part 1: The distribution of Minutes Awake.
+```{r}
+=======
 The client divided all the ages into 7 groups. In the original dataset, if the age is between 0 to 2, then those orangutans are classified as age level 1; if the age is between 2 to 4, then those orangutans are classified as age level 2; if the age is between 4 to 6, then those orangutans are classified as age level 3; if the age is between 6 to 8, then those orangutans are classified as age level 4; if the age is between 8 to 10, then those orangutans are classified as age level 5; if the age is between 10 to 12, then those orangutans are classified as age level 5. For those with ages greater than 12, they go to the age 7 group. Also, all the minutes awake are greater than 360 minutes.
 
 # Part 1: The Distribution of Minutes Awake
 ```{r, echo=FALSE}
+>>>>>>> 1c13f5020921ff195337bba3d19d49c24d9f3636
 ggplot(df, aes(x = `Minutes.awake`)) +
   geom_histogram(binwidth = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   labs(
@@ -43,10 +48,15 @@ ggplot(df, aes(x = `Minutes.awake`)) +
 ```{r, echo=FALSE}
 age_ranges <- c("0-2", "2-4", "4-6", "6-8", "8-10", "10-12", ">12")
 # Boxplot
+<<<<<<< HEAD
+ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
+  geom_boxplot(fill = "skyblue", color = "#6495ED", outlier.colour = "red", outlier.size = 3, alpha=0.7) +
+=======
 ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) +
   geom_boxplot(fill = "skyblue", color = "#6495ED", 
                outlier.colour = "red", outlier.size = 3, 
                alpha=0.7) +
+>>>>>>> 1c13f5020921ff195337bba3d19d49c24d9f3636
   labs(
     title = "Boxplot of DiversityScore by Age",
     x = "Age Group",
@@ -57,7 +67,11 @@ ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) 
 
 
 # Violinplot
+<<<<<<< HEAD
+ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
+=======
 ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) +
+>>>>>>> 1c13f5020921ff195337bba3d19d49c24d9f3636
   geom_violin(fill = "#F3A683", color = "#E67F00", alpha=0.7) +
   labs(
     title = "Violinplot of DiversityScore by Age",
@@ -204,3 +218,5 @@ print(result)
 From the table above, Age 4 group has 68 kinds of positional behaviors, which is the most number of distinct positional behaviors across all age groups. Age 1 group has only 49 kinds of positional behaviors, which is the least number of distinct behaviour among 7 groups.
 
 Also, from the line graph, starting from age 2 to 4, there is a surge in the number of distinct positional behaviors, and after year 4, there is a significant decrease in number of positional behaviors, which means that year 4 is an important time point to focus on.
+
+
