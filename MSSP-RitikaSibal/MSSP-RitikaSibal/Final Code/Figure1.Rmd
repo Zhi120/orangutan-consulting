@@ -163,7 +163,7 @@ d <- d %>% distinct(`Follow Number`, .keep_all = TRUE)
 ```
 ```{r}
 length(unique(d$Name))
-write.csv(d, "../final_data.csv")
+# write.csv(d, "../final_data.csv")
 ```
 
 ## Calculate Diversity
@@ -213,7 +213,7 @@ dive_d$DiversityScore <- as.numeric(dive_d$DiversityScore)
 ```
 ```{r}
 glimpse(dive_d)
-write.csv(dive_d, "../diversity_score.csv")
+# write.csv(dive_d, "../diversity_score.csv")
 ```
 
 ## GLMM Analysis
@@ -251,6 +251,7 @@ summary_df[nrow(summary_df) + 1,] = c('Gaussian Log Age^2', summary(model.3)$AIC
 #grid.table(summary_df)
 
 model <- model.3
+rownames(summary_df) <- NULL
 ```
 
 ## Analyse the GLMM
