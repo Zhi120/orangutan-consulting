@@ -93,7 +93,6 @@ print(diversity_stats)
 age_counts <- df_score %>%
   group_by(Age) %>%
   summarise(count = n())
-
 # Create a bar plot for the count of observations by age
 ggplot(age_counts, aes(x = factor(Age, labels = age_ranges), y = count)) +
   geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.8) +
@@ -104,6 +103,7 @@ ggplot(age_counts, aes(x = factor(Age, labels = age_ranges), y = count)) +
   ) +
   theme_minimal()
 ```
+
 ```{r, echo=FALSE}
 age_counts1 <- df_score %>%
   group_by(Age) %>%
