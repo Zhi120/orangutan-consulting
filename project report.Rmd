@@ -27,6 +27,7 @@ The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
 
+
 ## Comparing the Model3's Performance to Other Model
 ```{r}
 # Original Model
@@ -64,4 +65,75 @@ model.32 <- glmer(data=df_score, log_diversity ~ Age + I(Age^2) + (1|Name)+ (1|F
 summary(model.32)
 ```
 Fitting the same function in glmer will cause error, saying "did not converge".
+
+```{r}
+model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
+summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
+
+model.2 <- glmmTMB(data=df_score, DiversityScore ~ Age + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+summary_df[nrow(summary_df) + 1,] = c('Gaussian Log', summary(model.2)$AIC[1], summary(model.2)$AIC[2])
+
+model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+summary_df[nrow(summary_df) + 1,] = c('Gaussian Log Age^2', summary(model.3)$AIC[1], summary(model.3)$AIC[2])
+
+anova(model.1,model.2)
+anova(model.2,model.3)
+
+
+
+```
+
+```{r}
+residuals_model <- residuals(model.1, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- fitted(model.1)
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+
+```{r}
+residuals_model <- residuals(model.2, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- fitted(model.2)
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+
+```{r}
+residuals_model <- residuals(model.3, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- fitted(model.3)
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
 
