@@ -11,6 +11,12 @@ library(glmmTMB)
 library(lme4)
 ```
 
+```{r}
+# Read in the data
+df_score <- read.csv("diversity_score.csv")
+df_sex <- read.csv("diversity_score_withsex.csv")
+```
+
 # Introduction
 
 Our group's project is on the positional behaviors of orangutans. Orangutans are primates that live in the rain forests of Southeast Asia and are known for their red fur and high intelligence. They are also the largest arboreal mammals living in the world. They are found mainly in Borneo and Sumatra and are listed as an endangered species due to habitat loss and threats from illegal hunting. The main objective of this consulting project is to help the client analyze the positional behaviors of orangutans over developmental stages to understand how these behaviors evolve with age. The client used a measurement called Shannor Weaver Index to calculate the diversity score based on the positional behavior and try to find its relationship with age. How Shannor Weaver Index is calculated will be covered more in the method part of the report.
@@ -27,6 +33,18 @@ The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
 
+## Data Cleaning on Diversity Score with Sex Dataset
+```{r}
+df_sex$Sex <- gsub("M?", "M", df_sex$Sex, fixed = TRUE)
+df_sex <- df_sex[!df_sex$Sex %in% c("?", "Q"), ]
+unique(df_sex$Sex)
+```
+```{r}
+ggplot() +
+  geom_point(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, fill=Sex, color=Sex), size = 0.75, shape = 1, position = position_jitterdodge()) +
+  geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
+  theme_classic()
+```
 
 
 ## Comparing the Model3's Performance to Other Model
