@@ -7,7 +7,11 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(glmmTMB)
+library(lme4)
 ```
+
+
 
 # Introduction
 
@@ -25,7 +29,48 @@ The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
 
+
 #Anova moodel
+
+## Comparing the Model3's Performance to Other Model
+```{r}
+# Original Model
+model.31 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+summary(model.31)
+
+# Try original model adding random slope for Age
+model.6 <- glmmTMB(
+  data = df_score,
+  DiversityScore ~ Age + I(Age^2) + 
+    (1 + Age| Name) + 
+    (1 | FollowNumber),
+  family = gaussian(link = "log")
+)
+summary(model.6)
+anova(model.31, model.6)
+```
+```{r}
+# Try original model without gaussian log link
+model.31 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber))
+summary(model.31)
+
+# Try Linear Mixed Model
+model_linear <- lmer(
+  DiversityScore ~ Age + I(Age^2) + 
+    (1 | Name) + (1 | FollowNumber),
+  data = df_score)
+```
+
+
+```{r}
+# Model Fitting using glmer
+df_score$log_diversity <- log(df_score$DiversityScore)
+model.32 <- glmer(data=df_score, log_diversity ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber))
+summary(model.32)
+```
+Fitting the same function in glmer will cause error, saying "did not converge".
+
+
 ```{r}
 model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
 summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
