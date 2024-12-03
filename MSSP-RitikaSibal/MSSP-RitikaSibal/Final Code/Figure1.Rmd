@@ -167,6 +167,95 @@ length(unique(d$Name))
 ```
 
 ## Calculate Diversity
+```{r}
+df_score <- read.csv("C:/Users/Owner/Documents/orangutan-consulting fork/diversity_score.csv")
+df <- read.csv("C:/Users/Owner/Documents/orangutan-consulting fork/final_data.csv")
+```
+
+```{r}
+hist(df_score$DiversityScore, main = "Histogram of DiversityScore", xlab = "DiversityScore")
+qqnorm(df_score$DiversityScore)
+qqline(df_score$DiversityScore, col = "red")
+
+```
+
+
+```{r}
+model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
+summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
+
+model.2 <- glmmTMB(data=df_score, DiversityScore ~ Age + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+summary_df[nrow(summary_df) + 1,] = c('Gaussian Log', summary(model.2)$AIC[1], summary(model.2)$AIC[2])
+
+model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+summary_df[nrow(summary_df) + 1,] = c('Gaussian Log Age^2', summary(model.3)$AIC[1], summary(model.3)$AIC[2])
+
+#plot.new()
+#grid.table(summary_df)
+
+model.1
+model.2
+model.3
+
+anova(model.1, model.2, model.3)
+```
+
+```{r}
+residuals_model <- residuals(model.1, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- fitted(model.1)
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+```{r}
+residuals_model <- residuals(model.2, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- fitted(model.2)
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+
+
+```{r}
+residuals_model <- residuals(model.3, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- fitted(model.3)
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+
+```
+
 
 This is all done using the default shannon-weaver index, but you can change it to simpson or invsimpson
 

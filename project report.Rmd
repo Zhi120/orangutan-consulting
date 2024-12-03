@@ -11,11 +11,15 @@ library(glmmTMB)
 library(lme4)
 ```
 
+<<<<<<< HEAD
+
+=======
 ```{r}
 # Read in the data
 df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
 ```
+>>>>>>> c59b26c9f9197cdee387f898be3b053aa0a91247
 
 # Introduction
 
@@ -46,6 +50,8 @@ ggplot() +
   theme_classic()
 ```
 
+
+#Anova moodel
 
 ## Comparing the Model3's Performance to Other Model
 ```{r}
@@ -114,6 +120,7 @@ summary(model.32)
 ```
 Fitting the same function in glmer will cause error, saying "did not converge".
 
+
 ```{r}
 model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
 summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
@@ -130,7 +137,7 @@ anova(model.2,model.3)
 
 
 ```
-
+#Assumptions
 ```{r}
 residuals_model <- residuals(model.1, type = "pearson")
 
