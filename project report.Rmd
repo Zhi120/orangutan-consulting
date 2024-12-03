@@ -11,15 +11,13 @@ library(glmmTMB)
 library(lme4)
 ```
 
-<<<<<<< HEAD
 
-=======
 ```{r}
 # Read in the data
 df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
 ```
->>>>>>> c59b26c9f9197cdee387f898be3b053aa0a91247
+
 
 # Introduction
 
