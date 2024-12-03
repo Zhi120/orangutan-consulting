@@ -11,7 +11,15 @@ library(glmmTMB)
 library(lme4)
 ```
 
+<<<<<<< HEAD
 
+=======
+```{r}
+# Read in the data
+df_score <- read.csv("diversity_score.csv")
+df_sex <- read.csv("diversity_score_withsex.csv")
+```
+>>>>>>> c59b26c9f9197cdee387f898be3b053aa0a91247
 
 # Introduction
 
@@ -28,6 +36,19 @@ In this report, we will mainly talk about the basic EDA to analyze the data, the
 The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
+
+## Data Cleaning on Diversity Score with Sex Dataset
+```{r}
+df_sex$Sex <- gsub("M?", "M", df_sex$Sex, fixed = TRUE)
+df_sex <- df_sex[!df_sex$Sex %in% c("?", "Q"), ]
+unique(df_sex$Sex)
+```
+```{r}
+ggplot() +
+  geom_point(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, fill=Sex, color=Sex), size = 0.75, shape = 1, position = position_jitterdodge()) +
+  geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
+  theme_classic()
+```
 
 
 #Anova moodel
@@ -61,6 +82,35 @@ model_linear <- lmer(
   data = df_score)
 ```
 
+## Prediction check
+```{r}
+#run the model
+model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+
+# get model predictions (include random effect)
+predicted_values <- predict(model.3, type = "response")
+
+# actual values
+actual_values <- df_score$DiversityScore
+
+# MSE
+MSE <- mean((actual_values - predicted_values)^2)
+print(MSE)
+
+# use R-square
+library(performance)
+r2 <- r2(model.3)
+print(r2)
+
+#using plot
+ggplot(df_score, aes(x = actual_values, y = predicted_values)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Actual vs Predicted DiversityScore",
+       x = "Actual DiversityScore",
+       y = "Predicted DiversityScore") +
+  theme_minimal()
+```
 
 ```{r}
 # Model Fitting using glmer
@@ -141,4 +191,5 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
      xlab = "Fitted Values", ylab = "Residuals")
 abline(h = 0, col = "red")
 ```
+
 
