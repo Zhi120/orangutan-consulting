@@ -11,15 +11,13 @@ library(glmmTMB)
 library(lme4)
 ```
 
-<<<<<<< HEAD
 
-=======
 ```{r}
 # Read in the data
 df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
 ```
->>>>>>> c59b26c9f9197cdee387f898be3b053aa0a91247
+
 
 # Introduction
 
@@ -50,106 +48,14 @@ ggplot() +
   geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
   theme_classic()
 ```
-
-
-#Anova moodel
-
-## Comparing the Model3's Performance to Other Model
+# Client Models
 ```{r}
-# Original Model
-model.31 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
-summary(model.31)
 
-# Try original model adding random slope for Age
-model.6 <- glmmTMB(
-  data = df_score,
-  DiversityScore ~ Age + I(Age^2) + 
-    (1 + Age| Name) + 
-    (1 | FollowNumber),
-  family = gaussian(link = "log")
-)
-summary(model.6)
-anova(model.31, model.6)
-```
-```{r}
-# Try original model without gaussian log link
-model.31 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber))
-summary(model.31)
-
-# Try Linear Mixed Model
-model_linear <- lmer(
-  DiversityScore ~ Age + I(Age^2) + 
-    (1 | Name) + (1 | FollowNumber),
-  data = df_score)
 ```
 
-## Prediction check
-```{r}
-#run the model
-model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
-
-# get model predictions (include random effect)
-predicted_values <- predict(model.3, type = "response")
-
-# actual values
-actual_values <- df_score$DiversityScore
-
-# MSE
-MSE <- mean((actual_values - predicted_values)^2)
-print(MSE)
-
-# use R-square
-library(performance)
-r2 <- r2(model.3)
-print(r2)
-
-#using plot
-ggplot(df_score, aes(x = actual_values, y = predicted_values)) +
-  geom_point(alpha = 0.6, color = "blue") +
-  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  labs(title = "Actual vs Predicted DiversityScore",
-       x = "Actual DiversityScore",
-       y = "Predicted DiversityScore") +
-  theme_minimal()
-```
-
-```{r}
-# Model Fitting using glmer
-df_score$log_diversity <- log(df_score$DiversityScore)
-model.32 <- glmer(data=df_score, log_diversity ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber))
-summary(model.32)
-```
-Fitting the same function in glmer will cause error, saying "did not converge".
 
 
-```{r}
-df_score$Age <- as.factor(df_score$Age)
-
-model.1 <- glmmTMB(data=df_sex, DiversityScore ~ Sex+ (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
-summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
-
-model.2 <- glmmTMB(data=df_sex, DiversityScore ~ Age + Sex+ (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
-summary_df[nrow(summary_df) + 1,] = c('Gaussian Log', summary(model.2)$AIC[1], summary(model.2)$AIC[2])
-
-model.6 <- glmmTMB(
-  data = df_sex,
-  DiversityScore ~ Age  + Sex+
-    (1 + Age| Name) + 
-    (1 | FollowNumber),
-  family = gaussian(link = "log")
-)
-
-#model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
-#summary_df[nrow(summary_df) + 1,] = c('Gaussian Log Age^2', summary(model.3)$AIC[1], summary(model.3)$AIC[2])
-
-anova(model.1,model.2)
-anova(model.2,model.6)
-#anova(model.2,model.3)
-
-
-
-```
-#Assumptions
+# Check Client's Model Assumptions
 ```{r}
 residuals_model <- residuals(model.1, type = "pearson")
 
@@ -203,5 +109,64 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
      xlab = "Fitted Values", ylab = "Residuals")
 abline(h = 0, col = "red")
 ```
+
+# Compare Client's Model with Our Model
+```{r}
+df_score$Age <- as.factor(df_score$Age)
+
+model.1 <- glmmTMB(data=df_sex, DiversityScore ~ Sex+ (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
+summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
+
+model.2 <- glmmTMB(data=df_sex, DiversityScore ~ Age + Sex+ (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+summary_df[nrow(summary_df) + 1,] = c('Gaussian Log', summary(model.2)$AIC[1], summary(model.2)$AIC[2])
+
+model.6 <- glmmTMB(
+  data = df_sex,
+  DiversityScore ~ Age  + Sex+
+    (1 + Age| Name) + 
+    (1 | FollowNumber),
+  family = gaussian(link = "log")
+)
+
+
+anova(model.1,model.2)
+anova(model.2,model.6)
+
+```
+
+
+
+## Model 6 Prediction Check
+```{r}
+#run the model
+model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+
+# get model predictions (include random effect)
+predicted_values <- predict(model.3, type = "response")
+
+# actual values
+actual_values <- df_score$DiversityScore
+
+# MSE
+MSE <- mean((actual_values - predicted_values)^2)
+print(MSE)
+
+# use R-square
+library(performance)
+r2 <- r2(model.3)
+print(r2)
+
+#using plot
+ggplot(df_score, aes(x = actual_values, y = predicted_values)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Actual vs Predicted DiversityScore",
+       x = "Actual DiversityScore",
+       y = "Predicted DiversityScore") +
+  theme_minimal()
+```
+
+
+
 
 
