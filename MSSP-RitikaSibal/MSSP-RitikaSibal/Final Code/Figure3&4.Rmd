@@ -203,6 +203,13 @@ dive_d$Age <- as.numeric(dive_d$Age)
 #dive_d_f <- subset(dive_d, `Sex` == "F" & Age != 7)
 #dive_d_m <- subset(dive_d, `Sex` == "M" & Age != 7)
 # Remove the Sex column
+<<<<<<< HEAD
+dive_d_f <- subset( dive_d_f, select = -Sex )
+dive_d_m <- subset( dive_d_m, select = -Sex )
+<<<<<<< HEAD
+```
+```{r}
+# write.csv(dive_d, "diversity_score_withsex.csv")
 #dive_d_f <- subset( dive_d_f, select = -Sex )
 #dive_d_m <- subset( dive_d_m, select = -Sex )
 ```
@@ -292,7 +299,7 @@ dive_d_m$Age <- as.numeric(dive_d_m$Age)
 model_M <- best_model(dive_d_m)
 summary(model_M)
 ```
-
+? underdispersion problem
 
 ## Plot the GLMM
 
