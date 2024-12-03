@@ -9,6 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(glmmTMB)
 library(lme4)
+library(caret)
 ```
 
 
@@ -48,14 +49,22 @@ ggplot() +
   geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
   theme_classic()
 ```
-# Client Models
-```{r}
 
+## Client Models
+
+Following client suggestions, we would like to use linear mixed effect models and build upon client's models and see if we improve the client's models. Initial client models are listed below:
+```{r}
+model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
+
+model.2 <- glmmTMB(data=df_score, DiversityScore ~ Age + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+
+model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
 ```
 
 
+## Check Client's Model Assumptions
 
-# Check Client's Model Assumptions
+We first need to check all the linear assumptions are met:
 ```{r}
 residuals_model <- residuals(model.1, type = "pearson")
 
@@ -109,8 +118,11 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
      xlab = "Fitted Values", ylab = "Residuals")
 abline(h = 0, col = "red")
 ```
+Based on the assumptions check above, all three models have normal distributed residuals, no-heavy tails in qq plot and random distribution in residual vs fitted plot, indicating that all the models satisfy linear assumptions.
 
-# Compare Client's Model with Our Model
+## Compare Client's Model with Our Model
+
+Here we propose three new models building upon the client models:
 ```{r}
 df_score$Age <- as.factor(df_score$Age)
 
@@ -133,39 +145,72 @@ anova(model.1,model.2)
 anova(model.2,model.6)
 
 ```
+Based on the chi-square test results, since the p-value for the chi-square test in less than 0.05, indicating that the model 6 with random slope for age is the best model. We will check for the model's performance in the next section.
 
 
+## Model 6 Performance
 
-## Model 6 Prediction Check
+To check for the performance of the model, we propose to use k-fold cross validation:
 ```{r}
-#run the model
-model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+# Custom function to fit models
+fit_glmmTMB <- function(train_data, test_data) {
+  model <- glmmTMB(
+    data = train_data,
+    DiversityScore ~ Age + Sex +
+      (1 + Age | Name) +
+      (1 | FollowNumber),
+    family = gaussian(link = "log")
+  )
+  
+  predictions <- predict(model, newdata = test_data, 
+                         allow.new.levels = TRUE, type = "response")
+  rmse_value <- sqrt(mean((test_data$DiversityScore - predictions)^2))
+  
+  return(rmse_value)
+}
 
-# get model predictions (include random effect)
-predicted_values <- predict(model.3, type = "response")
+# Split data into 5 folds
+set.seed(724)  # For reproducibility
+folds <- createFolds(df_sex$DiversityScore, k = 5, list = TRUE)
 
-# actual values
-actual_values <- df_score$DiversityScore
+cv_results <- sapply(folds, function(test_indices) {
+  test_data <- df_sex[test_indices, ]
+  train_data <- df_sex[-test_indices, ]
+  
+  fit_glmmTMB(train_data, test_data)
+})
 
-# MSE
-MSE <- mean((actual_values - predicted_values)^2)
-print(MSE)
+# Calculate average RMSE across folds
+mean_rmse <- mean(cv_results)
+cat("Average RMSE across folds:", mean_rmse, "\n")
 
-# use R-square
-library(performance)
-r2 <- r2(model.3)
-print(r2)
+summary(model.6)
+```
+```{r}
+# Predicted values
+predicted_values <- predict(model.6, type = "response")
 
-#using plot
-ggplot(df_score, aes(x = actual_values, y = predicted_values)) +
-  geom_point(alpha = 0.6, color = "blue") +
-  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  labs(title = "Actual vs Predicted DiversityScore",
-       x = "Actual DiversityScore",
-       y = "Predicted DiversityScore") +
-  theme_minimal()
+# Observed values
+observed_values <- df_sex$DiversityScore
+
+# Scatter plot
+plot(observed_values, predicted_values,
+     xlab = "Observed Values",
+     ylab = "Predicted Values",
+     main = "Predicted vs Observed",
+     pch = 16, col = "blue")
+abline(a = 0, b = 1, col = "red", lwd = 2)
+
+df_sex$predicted_values <- predicted_values
+ggplot(df_sex, aes(x = Age, y = DiversityScore, color = Name)) +
+  geom_point() +
+  geom_line(aes(y = predicted_values), linetype = "dashed") +
+  labs(title = "Fitted Model by Group", x = "Age", y = "Diversity Score") +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
+Based on the model output, the RMSE of the model is 0.43.
 
 
 
