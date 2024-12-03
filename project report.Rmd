@@ -44,6 +44,7 @@ df_sex <- df_sex[!df_sex$Sex %in% c("?", "Q"), ]
 unique(df_sex$Sex)
 ```
 ```{r}
+library(ggplot2)
 ggplot() +
   geom_point(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, fill=Sex, color=Sex), size = 0.75, shape = 1, position = position_jitterdodge()) +
   geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
@@ -122,17 +123,28 @@ Fitting the same function in glmer will cause error, saying "did not converge".
 
 
 ```{r}
-model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
+df_score$Age <- as.factor(df_score$Age)
+
+model.1 <- glmmTMB(data=df_sex, DiversityScore ~ Sex+ (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
 summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
 
-model.2 <- glmmTMB(data=df_score, DiversityScore ~ Age + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+model.2 <- glmmTMB(data=df_sex, DiversityScore ~ Age + Sex+ (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
 summary_df[nrow(summary_df) + 1,] = c('Gaussian Log', summary(model.2)$AIC[1], summary(model.2)$AIC[2])
 
-model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
-summary_df[nrow(summary_df) + 1,] = c('Gaussian Log Age^2', summary(model.3)$AIC[1], summary(model.3)$AIC[2])
+model.6 <- glmmTMB(
+  data = df_sex,
+  DiversityScore ~ Age  + Sex+
+    (1 + Age| Name) + 
+    (1 | FollowNumber),
+  family = gaussian(link = "log")
+)
+
+#model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+#summary_df[nrow(summary_df) + 1,] = c('Gaussian Log Age^2', summary(model.3)$AIC[1], summary(model.3)$AIC[2])
 
 anova(model.1,model.2)
-anova(model.2,model.3)
+anova(model.2,model.6)
+#anova(model.2,model.3)
 
 
 
