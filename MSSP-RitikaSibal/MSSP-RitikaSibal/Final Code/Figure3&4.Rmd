@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, comment = "##", prompt = TRUE, tidy = TRUE, tidy.opts = list(width.cutoff = 75), fig.path = "Figure3&4 Images/")
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, comment = "##", prompt = TRUE, tidy = TRUE, tidy.opts = list(width.cutoff = 75), fig.path = "/Users/ritikasibal/Desktop/W24/Research/OntogenyOfLocomotion/Final Code/Figure3&4 Images/")
 ```
 
 ## Load all the necessary libraries
@@ -126,9 +126,9 @@ load_in_data_post <- function(path, adult){
   return(df)
 }
 
-d_juv <- load_in_data_post("../parsed-all.xlsx", adult=FALSE)
+d_juv <- load_in_data_post("~/Desktop/Knott-Lab-Research/OntogenyOfLocomotion/Ritika Excel Files/parsed-all.xlsx", adult=FALSE)
 
-d_adult <- load_in_data_post("../parsed-mother-infant.xlsx", adult=TRUE)
+d_adult <- load_in_data_post("~/Desktop/Knott-Lab-Research/OntogenyOfLocomotion/Ritika Excel Files/parsed-mother-infant.xlsx", adult=TRUE)
 
 d <- rbind(d_juv, d_adult)
 d <- d %>% distinct(`Follow Number`, .keep_all = TRUE)
@@ -151,7 +151,7 @@ d_dict <- unique(d_dict)
 d_dict<-d_dict[!is.na(d_dict$`Age class lookup`), ]
 names(d_dict)[names(d_dict) == "Age class lookup"] <- "Sex"
 
-dict <- read_xlsx("../IndividualSex.xlsx" ,sheet = 1, guess_max = 1048576)
+dict <- read_xlsx("~/Desktop/Knott-Lab-Research/OntogenyOfLocomotion/Ritika Excel Files/IndividualSex.xlsx" ,sheet = 1, guess_max = 1048576)
 dict <- dict %>% select(-contains('Entry Date'))
 
 sex_dict <- rbind(dict, d_dict)
@@ -205,9 +205,12 @@ dive_d_m <- subset(dive_d, `Sex` == "M" & Age != 7)
 # Remove the Sex column
 dive_d_f <- subset( dive_d_f, select = -Sex )
 dive_d_m <- subset( dive_d_m, select = -Sex )
+<<<<<<< HEAD
 ```
 ```{r}
 # write.csv(dive_d, "diversity_score_withsex.csv")
+=======
+>>>>>>> ae58cbdaf00133d4390d1cb861cfb5d7b8bca63e
 ```
 
 ## T-Tests between the sexes
