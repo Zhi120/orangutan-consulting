@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(glmmTMB)
 library(lme4)
 library(caret)
+library(dplyr)
+library(Metrics)
 ```
 
 
@@ -17,6 +19,16 @@ library(caret)
 # Read in the data
 df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
+df_final <- read.csv("final_data.csv")
+
+df_final_subset <- df_final[, c("Name", "Follow.Number", "Minutes.awake")]
+df_final_subset <- df_final_subset %>%
+  rename(
+    FollowNumber = Follow.Number
+  )
+df_final_subset$Name <- tolower(df_final_subset$Name)
+df_sex <- merge(df_sex, df_final_subset, by = c("Name", "FollowNumber"), all.x = TRUE)
+
 ```
 
 
@@ -54,11 +66,18 @@ ggplot() +
 
 Following client suggestions, we would like to use linear mixed effect models and build upon client's models and see if we improve the client's models. Initial client models are listed below:
 ```{r}
-model.1 <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
+model.1 <- glmmTMB(data=df_score, 
+                   DiversityScore ~  (1|Name) + (1|FollowNumber),
+                   family=gaussian(link="log"))
 
-model.2 <- glmmTMB(data=df_score, DiversityScore ~ Age + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+model.2 <- glmmTMB(data=df_score, 
+                   DiversityScore ~ Age + (1|Name)+ (1|FollowNumber),
+                   family=gaussian(link="log"))
 
-model.3 <- glmmTMB(data=df_score, DiversityScore ~ Age + I(Age^2) + (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
+model.3 <- glmmTMB(data=df_score, 
+                   DiversityScore ~ Age + I(Age^2) + 
+                     (1|Name) + (1|FollowNumber), 
+                   family=gaussian(link="log"))
 ```
 
 
@@ -75,7 +94,7 @@ hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
 qqnorm(residuals_model)
 qqline(residuals_model, col = "red")
 
-fitted_values <- fitted(model.1)
+fitted_values <- predict(model.1, type = "response")
 
 # Plot residuals vs fitted values
 plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
@@ -93,7 +112,7 @@ hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
 qqnorm(residuals_model)
 qqline(residuals_model, col = "red")
 
-fitted_values <- fitted(model.2)
+fitted_values <- predict(model.2, type = "response")
 
 # Plot residuals vs fitted values
 plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
@@ -111,7 +130,7 @@ hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
 qqnorm(residuals_model)
 qqline(residuals_model, col = "red")
 
-fitted_values <- fitted(model.3)
+fitted_values <- predict(model.3, type = "response")
 
 # Plot residuals vs fitted values
 plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
@@ -120,53 +139,152 @@ abline(h = 0, col = "red")
 ```
 Based on the assumptions check above, all three models have normal distributed residuals, no-heavy tails in qq plot and random distribution in residual vs fitted plot, indicating that all the models satisfy linear assumptions.
 
-## Compare Client's Model with Our Model
+
+## Build Upon Client's Model
 
 Here we propose three new models building upon the client models:
 ```{r}
-df_score$Age <- as.factor(df_score$Age)
+df_sex$Age <- as.factor(df_sex$Age)
+df_sex <- df_sex %>%
+  filter(!is.na(Minutes.awake))
 
-model.1 <- glmmTMB(data=df_sex, DiversityScore ~ Sex+ (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
-summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
+newmodel.1 <- glmmTMB(data=df_sex, DiversityScore ~ Age + (1|Name), 
+                   family = gaussian("log"))
+summary(newmodel.1)
 
-model.2 <- glmmTMB(data=df_sex, DiversityScore ~ Age + Sex+ (1|Name)+ (1|FollowNumber), family=gaussian(link="log"))
-summary_df[nrow(summary_df) + 1,] = c('Gaussian Log', summary(model.2)$AIC[1], summary(model.2)$AIC[2])
+newmodel.2 <- glmmTMB(data=df_sex, 
+                  DiversityScore ~ Age + Sex + (1|Name), 
+                   family = gaussian("log"))
+summary(newmodel.2)
 
-model.6 <- glmmTMB(
-  data = df_sex,
-  DiversityScore ~ Age  + Sex+
-    (1 + Age| Name) + 
-    (1 | FollowNumber),
-  family = gaussian(link = "log")
+newmodel.3 <- glmmTMB(data = df_sex, 
+                   DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
+                   family = gaussian("log"))
+summary(newmodel.3)
+
+anova(newmodel.1, newmodel.2)
+anova(newmodel.2, newmodel.3)
+anova(newmodel.1, newmodel.3)
+```
+The model will fail to converge for glmer for both model.2 and model.3.
+Based on the model output result, model.3 is the best model, and minutes awake is a statistically significant variable.
+
+## Model Diagnostics for Our Model
+```{r}
+residuals_model <- residuals(newmodel.1, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(newmodel.1, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+```{r}
+residuals_model <- residuals(newmodel.2, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(newmodel.2, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+
+```{r}
+residuals_model <- residuals(newmodel.3, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(newmodel.3, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+By checking the models assumptions, all three of our models satisfy the model assumptions.
+
+## Compare Our Model to The Client's Model
+```{r, warning=FALSE}
+aic_model1 <- AIC(model.1)
+aic_newmodel1 <- AIC(newmodel.1)
+aic_model2 <- AIC(model.2)
+aic_newmodel2 <- AIC(newmodel.2)
+aic_model3 <- AIC(model.3)
+aic_newmodel3 <- AIC(newmodel.3)
+
+predictions <- predict(model.1, type = "response")
+mse_model1 <- mean((df_sex$DiversityScore - predictions)^2)
+
+predictions <- predict(newmodel.1, type = "response")
+mse_newmodel1 <- mean((df_sex$DiversityScore - predictions)^2)
+
+predictions <- predict(model.2, type = "response")
+mse_model2 <- mean((df_sex$DiversityScore - predictions)^2)
+
+predictions <- predict(newmodel.2, type = "response")
+mse_newmodel2 <- mean((df_sex$DiversityScore - predictions)^2)
+
+predictions <- predict(model.3, type = "response")
+mse_model3 <- mean((df_sex$DiversityScore - predictions)^2)
+
+predictions <- predict(newmodel.3, type = "response")
+mse_newmodel3 <- mean((df_sex$DiversityScore - predictions)^2)
+
+
+# Create a comparison table
+comparison_table <- data.frame(
+  Model = c("Model 1", "Our Model 1", "Model 2", "Our Model 2", 
+            "Model 3", "Our Model 3"),
+  AIC = c(aic_model1, aic_newmodel1, aic_model2, aic_newmodel2, 
+          aic_model3, aic_newmodel3),
+  MSE = c(mse_model1, mse_newmodel1, mse_model2, mse_newmodel2,
+          mse_model3, mse_newmodel3)
 )
 
-
-anova(model.1,model.2)
-anova(model.2,model.6)
-
+# Print the table
+print(comparison_table)
 ```
-Based on the chi-square test results, since the p-value for the chi-square test in less than 0.05, indicating that the model 6 with random slope for age is the best model. We will check for the model's performance in the next section.
 
 
-## Model 6 Performance
+
+## Model 3 Performance Using Cross Validation
 
 To check for the performance of the model, we propose to use k-fold cross validation:
-```{r}
+```{r, warning=FALSE}
 # Custom function to fit models
 fit_glmmTMB <- function(train_data, test_data) {
   model <- glmmTMB(
     data = train_data,
-    DiversityScore ~ Age + Sex +
-      (1 + Age | Name) +
-      (1 | FollowNumber),
+    DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
     family = gaussian(link = "log")
   )
   
   predictions <- predict(model, newdata = test_data, 
                          allow.new.levels = TRUE, type = "response")
-  rmse_value <- sqrt(mean((test_data$DiversityScore - predictions)^2))
+  mse_value <- mean((test_data$DiversityScore - predictions)^2)
   
-  return(rmse_value)
+  return(mse_value)
 }
 
 # Split data into 5 folds
@@ -181,36 +299,64 @@ cv_results <- sapply(folds, function(test_indices) {
 })
 
 # Calculate average RMSE across folds
-mean_rmse <- mean(cv_results)
-cat("Average RMSE across folds:", mean_rmse, "\n")
-
-summary(model.6)
+mean_mse <- mean(cv_results)
+cat("Average MSE across folds:", mean_mse, "\n")
 ```
+
+## Try XGBoost Model
 ```{r}
-# Predicted values
-predicted_values <- predict(model.6, type = "response")
+# Load necessary libraries
+library(xgboost)
 
-# Observed values
-observed_values <- df_sex$DiversityScore
+# Preprocess data
+df_sex_clean <- df_sex %>%
+  mutate(Sex = ifelse(Sex == "Male", 1, 0))
 
-# Scatter plot
-plot(observed_values, predicted_values,
-     xlab = "Observed Values",
-     ylab = "Predicted Values",
-     main = "Predicted vs Observed",
-     pch = 16, col = "blue")
-abline(a = 0, b = 1, col = "red", lwd = 2)
+df_sex_clean <- df_sex_clean %>%
+  mutate(
+    Age = as.numeric(factor(Age)),  # Convert Age to numeric factor
+    Name = as.numeric(factor(Name))  # Convert Name to numeric factor
+  )
 
-df_sex$predicted_values <- predicted_values
-ggplot(df_sex, aes(x = Age, y = DiversityScore, color = Name)) +
-  geom_point() +
-  geom_line(aes(y = predicted_values), linetype = "dashed") +
-  labs(title = "Fitted Model by Group", x = "Age", y = "Diversity Score") +
-  theme_minimal() +
-  theme(legend.position = "none")
+# Define predictor matrix (X) and target variable (y)
+X <- as.matrix(df_sex_clean %>% select(-DiversityScore))
+y <- df_sex_clean$DiversityScore
+
+# Split data into training and testing sets
+set.seed(724)
+trainIndex <- createDataPartition(y, p = 0.8, list = FALSE)
+X_train <- X[trainIndex, ]
+X_test <- X[-trainIndex, ]
+y_train <- y[trainIndex]
+y_test <- y[-trainIndex]
+
+# Convert to xgb.DMatrix
+dtrain <- xgb.DMatrix(data = X_train, label = y_train)
+dtest <- xgb.DMatrix(data = X_test, label = y_test)
+
+# Train XGBoost model
+params <- list(
+  objective = "reg:squarederror",  # For regression
+  eta = 0.1,  # Learning rate
+  max_depth = 6,  # Tree depth
+  subsample = 0.8,  # Subsampling ratio
+  colsample_bytree = 0.8  # Feature sampling ratio
+)
+xgb_model <- xgboost(
+  data = dtrain,
+  params = params,
+  nrounds = 100,  # Number of boosting rounds
+  verbose = 1
+)
+
+# Predict on test set
+y_pred <- predict(xgb_model, dtest)
+
+# Evaluate model
+mse <- mean((y_test - y_pred)^2)
+cat("Mean Squared Error (XGBoost):", mse, "\n")
 ```
 
-Based on the model output, the RMSE of the model is 0.43.
 
 
 
