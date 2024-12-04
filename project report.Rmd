@@ -48,8 +48,11 @@ ggplot() +
   geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
   theme_classic()
 ```
+
 # Client Models
 ```{r}
+model.1_client <- glmmTMB(data=df_score, DiversityScore ~  (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
+summary_df_client <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
 
 ```
 
@@ -112,7 +115,7 @@ abline(h = 0, col = "red")
 
 # Compare Client's Model with Our Model
 ```{r}
-df_score$Age <- as.factor(df_score$Age)
+df_sex$Age <- as.factor(df_sex$Age)
 
 model.1 <- glmmTMB(data=df_sex, DiversityScore ~ Sex+ (1|Name) + (1|FollowNumber), family=gaussian(link="log"))
 summary_df <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1)$AIC[1], BIC=summary(model.1)$AIC[2])
@@ -128,10 +131,39 @@ model.6 <- glmmTMB(
   family = gaussian(link = "log")
 )
 
+summary(model.2)
 
 anova(model.1,model.2)
 anova(model.2,model.6)
 
+```
+
+## compare client's model 1 with our updated model1
+```{r}
+# MSE
+# Our model
+predicted_values_model1 <- predict(model.1, type = "response")
+actual_values <- df_sex$DiversityScore
+MSE_model1 <- mean((actual_values - predicted_values_model1)^2)
+
+# cliet's model
+predicted_values_model1_client <- predict(model.1_client, type = "response")
+actual_values_client <- df_score$DiversityScore
+MSE_model1_client <- mean((actual_values_client - predicted_values_model1_client)^2)
+
+print(MSE_model1)
+print(MSE_model1_client)
+
+# AIC
+print(summary_df)
+print(summary_df_client)
+```
+# remove follow number
+```{r}
+model.1_remove <- glmer(data=df_sex, DiversityScore ~ Age+ (1|Name), family=gaussian(link="log"))
+summary_1remove <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1_remove)$AIC[1], BIC=summary(model.1_remove)$AIC[2])
+
+print(summary_1remove)
 ```
 
 
