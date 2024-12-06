@@ -12,24 +12,17 @@ library(lme4)
 library(caret)
 library(dplyr)
 library(Metrics)
+library(rstanarm)
 library(ggplot2)
 library(tidyr)
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 # Read in the data
 df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
 df_final <- read.csv("final_data.csv")
-
-df_final_subset <- df_final[, c("Name", "Follow.Number", "Minutes.awake")]
-df_final_subset <- df_final_subset %>%
-  rename(
-    FollowNumber = Follow.Number
-  )
-df_final_subset$Name <- tolower(df_final_subset$Name)
-df_sex <- merge(df_sex, df_final_subset, by = c("Name", "FollowNumber"), all.x = TRUE)
 
 ```
 
@@ -51,24 +44,27 @@ $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
 
 ## Data Cleaning on Diversity Score with Sex Dataset
-```{r}
+
+We noticed that there is values "M?" in the sex column, so we changed "M?" to "M". Now we can check the unique value in the sex column:
+```{r, echo=FALSE}
 df_sex$Sex <- gsub("M?", "M", df_sex$Sex, fixed = TRUE)
 df_sex <- df_sex[!df_sex$Sex %in% c("?", "Q"), ]
 unique(df_sex$Sex)
 ```
+
+After cleaning the Sex column, we drew a box plots to show the difference in distribution with different sex in different age groups:
+
 
 ## Visualization
 
 ### Some Data Description
 
 #### Part 1: The distribution of Minutes Awake.
-```{r}
-=======
+
 The client divided all the ages into 7 groups. In the original dataset, if the age is between 0 to 2, then those orangutans are classified as age level 1; if the age is between 2 to 4, then those orangutans are classified as age level 2; if the age is between 4 to 6, then those orangutans are classified as age level 3; if the age is between 6 to 8, then those orangutans are classified as age level 4; if the age is between 8 to 10, then those orangutans are classified as age level 5; if the age is between 10 to 12, then those orangutans are classified as age level 5. For those with ages greater than 12, they go to the age 7 group. Also, all the minutes awake are greater than 360 minutes.
 
 # Part 1: The Distribution of Minutes Awake
 ```{r, echo=FALSE}
->>>>>>> 1c13f5020921ff195337bba3d19d49c24d9f3636
 ggplot(df, aes(x = `Minutes.awake`)) +
   geom_histogram(binwidth = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   labs(
@@ -88,15 +84,11 @@ ggplot(df, aes(x = `Minutes.awake`)) +
 ```{r, echo=FALSE}
 age_ranges <- c("0-2", "2-4", "4-6", "6-8", "8-10", "10-12", ">12")
 # Boxplot
-<<<<<<< HEAD
-ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
-  geom_boxplot(fill = "skyblue", color = "#6495ED", outlier.colour = "red", outlier.size = 3, alpha=0.7) +
-=======
+
 ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) +
   geom_boxplot(fill = "skyblue", color = "#6495ED", 
                outlier.colour = "red", outlier.size = 3, 
                alpha=0.7) +
->>>>>>> 1c13f5020921ff195337bba3d19d49c24d9f3636
   labs(
     title = "Boxplot of DiversityScore by Age",
     x = "Age Group",
@@ -107,11 +99,7 @@ ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) 
 
 
 # Violinplot
-<<<<<<< HEAD
-ggplot(df_score, aes(x = factor(Age), y = DiversityScore)) +
-=======
 ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) +
->>>>>>> 1c13f5020921ff195337bba3d19d49c24d9f3636
   geom_violin(fill = "#F3A683", color = "#E67F00", alpha=0.7) +
   labs(
     title = "Violinplot of DiversityScore by Age",
@@ -267,8 +255,38 @@ library(ggplot2)
 ggplot() +
   geom_point(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, fill=Sex, color=Sex), size = 0.75, shape = 1, position = position_jitterdodge()) +
   geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
+  labs(title="Distribution for Different Sex with Different Age Groups",
+       x = "Age Group",
+       y = "Diversity Score")+
   theme_classic()
 ```
+From the plot above, there is clear distinction between distribution of diversity score for different sex. For age group 1 to 5, the median diversity score is higher for female compared to male. For age group 6, there is only female data in the dataset, and for age group 7, the median for both female and male group is similar.
+
+According to EDA, we also think minute awake is an important predictor in modeling the diversity score, so we add Minutes.awake variable to the dataset:
+```{r, echo=FALSE}
+df_final_subset <- df_final[, c("Name", "Follow.Number", "Minutes.awake")]
+df_final_subset <- df_final_subset %>%
+  rename(
+    FollowNumber = Follow.Number
+  )
+df_final_subset$Name <- tolower(df_final_subset$Name)
+df_sex <- merge(df_sex, df_final_subset, by = c("Name", "FollowNumber"), all.x = TRUE)
+
+glimpse(df_sex)
+```
+```{r, echo=FALSE}
+summary_name <- df_sex %>%
+  group_by(Name) %>%
+  summarise(count = n(),
+            max = max(DiversityScore),
+            min = min(DiversityScore),
+            median = median(DiversityScore),
+            std = sd(DiversityScore))
+std_na <- summary_name %>%
+  filter(is.na(std))
+print(std_na)
+```
+According to the standard deviation of diversity score in different name group, the name can be treated as a group variable(random effect). Those names in the above table only have 1 observation, we may consider remove those levels.(??)
 
 # Client Models
 ```{r}
@@ -352,7 +370,7 @@ Based on the assumptions check above, all three models have normal distributed r
 
 ## Build Upon Client's Model
 
-Here we propose three new models building upon the client models:
+Here we propose three new models building upon the client models, we treat age as a categorical variable, and we also add sex and minutes.awake into the model:
 ```{r}
 df_sex$Age <- as.factor(df_sex$Age)
 df_sex <- df_sex %>%
@@ -376,8 +394,16 @@ anova(newmodel.1, newmodel.2)
 anova(newmodel.2, newmodel.3)
 anova(newmodel.1, newmodel.3)
 ```
-The model will fail to converge for glmer for both model.2 and model.3.
-Based on the model output result, model.3 is the best model, and minutes awake is a statistically significant variable.
+According to the chi-square test, model.3 is the best model, and minutes awake， age group 2, 3, 6 and 7 are statistically significant variables. Sex is not a statistically significant variable, we can consider removing it in the later model.
+
+```{r}
+newmodel.4 <- glmmTMB(data = df_sex, 
+                   DiversityScore ~ Age + Minutes.awake + (1 | Name),
+                   family = gaussian("log"))
+summary(newmodel.4)
+anova(newmodel.4, newmodel.3)
+```
+According to the chi-square result above, the p-value greater than 0.05, showing that we cannot reject the null hypothesis, and adding variable sex does not signifcantly improve the model performance. We can further check the performance of model 4 using AIC and MSE below.
 
 ## Model Diagnostics for Our Model
 ```{r}
@@ -416,11 +442,7 @@ abline(h = 0, col = "red")
 ```
 
 ```{r}
-<<<<<<< HEAD
-df_sex$Age <- as.factor(df_sex$Age)
-=======
 residuals_model <- residuals(newmodel.3, type = "pearson")
->>>>>>> d44ae0f6a94409208e26ae694a3afd0f300db234
 
 # Plot histogram of residuals
 hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
@@ -436,6 +458,24 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
      xlab = "Fitted Values", ylab = "Residuals")
 abline(h = 0, col = "red")
 ```
+```{r}
+residuals_model <- residuals(newmodel.4, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(newmodel.4, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+```
+
 By checking the models assumptions, all three of our models satisfy the model assumptions.
 
 ## Compare Our Model to The Client's Model
@@ -446,6 +486,7 @@ aic_model2 <- AIC(model.2)
 aic_newmodel2 <- AIC(newmodel.2)
 aic_model3 <- AIC(model.3)
 aic_newmodel3 <- AIC(newmodel.3)
+aic_newmodel4 <- AIC(newmodel.4)
 
 predictions <- predict(model.1, type = "response")
 mse_model1 <- mean((df_sex$DiversityScore - predictions)^2)
@@ -465,27 +506,22 @@ mse_model3 <- mean((df_sex$DiversityScore - predictions)^2)
 predictions <- predict(newmodel.3, type = "response")
 mse_newmodel3 <- mean((df_sex$DiversityScore - predictions)^2)
 
+predictions <- predict(newmodel.4, type = "response")
+mse_newmodel4 <- mean((df_sex$DiversityScore - predictions)^2)
 
 # Create a comparison table
 comparison_table <- data.frame(
   Model = c("Model 1", "Our Model 1", "Model 2", "Our Model 2", 
-            "Model 3", "Our Model 3"),
+            "Model 3", "Our Model 3", "Our Model 4"),
   AIC = c(aic_model1, aic_newmodel1, aic_model2, aic_newmodel2, 
-          aic_model3, aic_newmodel3),
+          aic_model3, aic_newmodel3, aic_newmodel4),
   MSE = c(mse_model1, mse_newmodel1, mse_model2, mse_newmodel2,
-          mse_model3, mse_newmodel3)
+          mse_model3, mse_newmodel3, mse_newmodel4)
 )
 
-<<<<<<< HEAD
-summary(model.2)
 
-anova(model.1,model.2)
-anova(model.2,model.6)
-
-=======
 # Print the table
 print(comparison_table)
->>>>>>> d44ae0f6a94409208e26ae694a3afd0f300db234
 ```
 
 ## compare client's model 1 with our updated model1
@@ -515,12 +551,12 @@ summary_1remove <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(
 
 print(summary_1remove)
 ```
-
+According to the AIC and MSE comparison above, our models have lower AIC and MSE, indicating that our model performs better. Although from the ANOVA table above, adding variable sex does not further improve the model, Model 3 does have smaller MSE but higher AIC compared to model 4.(??)
 
 
 ## Model 3 Performance Using Cross Validation
 
-To check for the performance of the model, we propose to use k-fold cross validation:
+To validate the performance of the model 3 above, we propose to use k-fold cross validation:
 ```{r, warning=FALSE}
 # Custom function to fit models
 fit_glmmTMB <- function(train_data, test_data) {
@@ -548,10 +584,27 @@ cv_results <- sapply(folds, function(test_indices) {
   fit_glmmTMB(train_data, test_data)
 })
 
-# Calculate average RMSE across folds
+# Calculate average MSE across folds
 mean_mse <- mean(cv_results)
 cat("Average MSE across folds:", mean_mse, "\n")
 ```
+
+## Refit Model 3 with stan_glmer
+```{r}
+stanmodel_3 <- stan_glmer(
+  DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
+  data = df_sex,
+  family = gaussian(link = "log"),
+  refresh = 0
+)
+```
+```{r}
+predictions <- posterior_predict(stanmodel_3, type = "response")
+mean_prediction <- colMeans(predictions)
+mse_stanmodel3 <- mean((df_sex$DiversityScore - mean_prediction)^2)
+print(mse_stanmodel3)
+```
+
 
 ## Try XGBoost Model
 ```{r}
