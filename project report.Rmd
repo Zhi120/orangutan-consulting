@@ -23,7 +23,6 @@ library(tidyr)
 df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
 df_final <- read.csv("final_data.csv")
-
 ```
 
 
@@ -36,36 +35,13 @@ Each orangutan was observed for a period of time at different times, and the tim
 
 In this report, we will mainly talk about the basic EDA to analyze the data, the methods used to assess the relationship, including the models used, and finally the conclusion based on the results.
 
-# Method
-## How does Shannon Weaver Index calculate?
-
-The formula is shown below:
-$H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
-In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
-
-## Data Cleaning on Diversity Score with Sex Dataset
-
-We noticed that there is values "M?" in the sex column, so we changed "M?" to "M". Now we can check the unique value in the sex column:
-```{r, echo=FALSE}
-df_sex$Sex <- gsub("M?", "M", df_sex$Sex, fixed = TRUE)
-df_sex <- df_sex[!df_sex$Sex %in% c("?", "Q"), ]
-unique(df_sex$Sex)
-```
-
-After cleaning the Sex column, we drew a box plots to show the difference in distribution with different sex in different age groups:
-
-
-## Visualization
-
-### Some Data Description
-
-#### Part 1: The distribution of Minutes Awake.
+# EDA
 
 The client divided all the ages into 7 groups. In the original dataset, if the age is between 0 to 2, then those orangutans are classified as age level 1; if the age is between 2 to 4, then those orangutans are classified as age level 2; if the age is between 4 to 6, then those orangutans are classified as age level 3; if the age is between 6 to 8, then those orangutans are classified as age level 4; if the age is between 8 to 10, then those orangutans are classified as age level 5; if the age is between 10 to 12, then those orangutans are classified as age level 5. For those with ages greater than 12, they go to the age 7 group. Also, all the minutes awake are greater than 360 minutes.
 
-# Part 1: The Distribution of Minutes Awake
+## Part 1: The Distribution of Minutes Awake
 ```{r, echo=FALSE}
-ggplot(df, aes(x = `Minutes.awake`)) +
+ggplot(df_final, aes(x = `Minutes.awake`)) +
   geom_histogram(binwidth = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   labs(
     title = "Distribution of Minutes Awake",
@@ -80,11 +56,10 @@ ggplot(df, aes(x = `Minutes.awake`)) +
 ```
 
 
-#### Part 2: Visualization of Diversity Score
+## Part 2: Visualization of Diversity Score
 ```{r, echo=FALSE}
 age_ranges <- c("0-2", "2-4", "4-6", "6-8", "8-10", "10-12", ">12")
 # Boxplot
-
 ggplot(df_score, aes(x = factor(Age, labels = age_ranges), y = DiversityScore)) +
   geom_boxplot(fill = "skyblue", color = "#6495ED", 
                outlier.colour = "red", outlier.size = 3, 
@@ -117,7 +92,7 @@ It also shows that the Diversity Score for all age groups was roughly distribute
 
 In addition, as the age get older, the variability of the data seems to decrease and the distribution becomes more concentrated. 
 
-#### Part 3: Diversity Score Statistics
+## Part 3: Diversity Score Statistics
 ```{r, echo=FALSE}
 #eda 3
 diversity_stats <- df_score %>%
@@ -160,68 +135,14 @@ ggplot(age_counts1, aes(x = factor(Age, labels = age_ranges), y = count)) +
   ) +
   theme_minimal()
 ```
-
 The number of observations varies significantly across age groups.
-Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis.
-Age group 1 has the smallest count(about 180), which could affect the reliability of statistical summaries or models for that group.
+Age group 7 has the largest number of observations(about 800), which might introduce a sampling bias in the data analysis. Age group 1 has the smallest count(about 180), which could affect the reliability of statistical summaries or models for that group.
 
-#### Part 4: ANOVA Table Analysis
-Step 1: Check for Normality of Diversity Score
 
-```{r, warning=FALSE, echo=FALSE}
-ggplot(df_score, aes(x = DiversityScore)) +
-  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "lightblue", color = "black") +
-  stat_function(fun = dnorm, args = list(mean = mean(df_score$DiversityScore, na.rm = TRUE), 
-                                         sd = sd(df_score$DiversityScore, na.rm = TRUE)),
-                color = "red", size = 1) +
-  labs(title = "Histogram of DiversityScore with Normal Curve",
-       x = "DiversityScore",
-       y = "Density")
-
-```
-Since as shown in the histogram above, the diversity score follows a close to normal distribution, we can proceed to use ANOVA table to analyze the relationship between diversity score and age.
-
+## Part 4: Find the Number of Unique Positional Behaviors for Each Age Group
 ```{r, echo=FALSE}
-anova_result <- aov(DiversityScore ~ Age, data = df_score)
-summary(anova_result)
-```
-From the ANOVA table result, since p-value of f-test is less than 0.05, we can reject the null hypothesis, saying that there is statistically significant difference for diversity score between different age groups.
-
-
-
-#### Part 5: Distribution of Total Minutes Awake
-```{r, echo=FALSE}
-#eda 5
-final_data_df<-read.csv("final_data.csv")
-total_minutes_awake <- final_data_df %>%
-  group_by(Age) %>%
-  summarise(total_minutes_awake = sum(Minutes.awake, na.rm = TRUE)) 
-
-average_minutes_awake <- final_data_df %>%
-  group_by(Age) %>%
-  summarise(
-    total_minutes_awake = sum(Minutes.awake, na.rm = TRUE), # Total minutes awake
-    age_count = n() # Count of observations per age
-  ) %>%
-  mutate(avg_minutes_awake = total_minutes_awake / age_count)
-# Create a bar plot to show the distribution of total minutes awake by age
-ggplot(average_minutes_awake, aes(x = factor(Age, labels = age_ranges), y = avg_minutes_awake)) +
-  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) + # Bar plot
-  labs(
-    title = "Average Minutes Awake by Age Group",
-    x = "Age Group",
-    y = "Average Minutes Awake"
-  ) +
-  theme_minimal() +
-  theme( ) 
-```
-The average minutes awake is relatively consistent across all age groups, hovering around 630–660 minutes.
-There is no significant increase or decrease in the average minutes awake as age increases, suggesting that wakefulness may not be strongly age-dependent within this dataset.
-
-#### Part 6: Find the Number of Unique Positional Behaviors for Each Age Group
-```{r, echo=FALSE}
-result <- df %>%
-  pivot_longer(cols = 7:ncol(df),
+result <- df_final %>%
+  pivot_longer(cols = 7:ncol(df_final),
                names_to = "Behavior", 
                values_to = "Value") %>%
   filter(Value != 0.0)
@@ -247,11 +168,17 @@ From the table above, Age 4 group has 68 kinds of positional behaviors, which is
 
 Also, from the line graph, starting from age 2 to 4, there is a surge in the number of distinct positional behaviors, and after year 4, there is a significant decrease in number of positional behaviors, which means that year 4 is an important time point to focus on.
 
+## Part 5: Difference in Diversity Score between Sex
 
-#### Part 7: 
+We noticed that there is values "M?" in the sex column, so we changed "M?" to "M". Now we can check the unique value in the sex column:
+```{r, echo=FALSE}
+df_sex$Sex <- gsub("M?", "M", df_sex$Sex, fixed = TRUE)
+df_sex <- df_sex[!df_sex$Sex %in% c("?", "Q"), ]
+unique(df_sex$Sex)
+```
 
-```{r}
-library(ggplot2)
+After cleaning the Sex column, we drew a box plots to show the difference in distribution with different sex in different age groups:
+```{r, echo=FALSE, fig.width=6, fig.height=4, fig.align='center'}
 ggplot() +
   geom_point(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, fill=Sex, color=Sex), size = 0.75, shape = 1, position = position_jitterdodge()) +
   geom_boxplot(data=df_sex, aes(x=as.factor(Age), y=DiversityScore, color=Sex), alpha = 0.6) +
@@ -274,6 +201,8 @@ df_sex <- merge(df_sex, df_final_subset, by = c("Name", "FollowNumber"), all.x =
 
 glimpse(df_sex)
 ```
+
+## Part 6: Standard Deviation of Diversity Score for Each Name Group
 ```{r, echo=FALSE}
 summary_name <- df_sex %>%
   group_by(Name) %>%
@@ -286,14 +215,21 @@ std_na <- summary_name %>%
   filter(is.na(std))
 print(std_na)
 ```
-According to the standard deviation of diversity score in different name group, the name can be treated as a group variable(random effect). Those names in the above table only have 1 observation, we may consider remove those levels.(??)
+According to the standard deviation of diversity score in different name group, the name can be treated as a group variable(random effect). Those names in the above table only have 1 observation, we may consider remove those levels.
 
-# Client Models
-```{r}
+
+# Method
+## How does Shannon Weaver Index calculate?
+
+The formula is shown below:
+$H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
+In this formula, S represents the number of unique categories in the data, $p_i$ is the proportion, which in the client's data refers to the proportion of recorded time of each distinct behaviors of a specific orangutan in relation to this orangutan's total minutes of awake.
+
+
 ## Client Models
 
-#Following client suggestions, we would like to use linear mixed effect models and build upon client's models and see if we improve the client's models. Initial client models are listed below:
-
+Following client suggestions, we would like to use linear mixed effect models and build upon client's models and see if we improve the client's models. Initial client models are listed below:
+```{r}
 model.1 <- glmmTMB(data=df_score, 
                    DiversityScore ~  (1|Name) + (1|FollowNumber),
                    family=gaussian(link="log"))
@@ -312,7 +248,9 @@ model.3 <- glmmTMB(data=df_score,
 ## Check Client's Model Assumptions
 
 We first need to check all the linear assumptions are met:
-```{r}
+
+### Model 1
+```{r, echo=FALSE}
 residuals_model <- residuals(model.1, type = "pearson")
 
 # Plot histogram of residuals
@@ -330,7 +268,8 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
 abline(h = 0, col = "red")
 ```
 
-```{r}
+### Model 2
+```{r, echo=FALSE}
 residuals_model <- residuals(model.2, type = "pearson")
 
 # Plot histogram of residuals
@@ -348,7 +287,8 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
 abline(h = 0, col = "red")
 ```
 
-```{r}
+### Model 3
+```{r, echo=FALSE}
 residuals_model <- residuals(model.3, type = "pearson")
 
 # Plot histogram of residuals
@@ -367,46 +307,53 @@ abline(h = 0, col = "red")
 ```
 Based on the assumptions check above, all three models have normal distributed residuals, no-heavy tails in qq plot and random distribution in residual vs fitted plot, indicating that all the models satisfy linear assumptions.
 
-
 ## Build Upon Client's Model
 
 Here we propose three new models building upon the client models, we treat age as a categorical variable, and we also add sex and minutes.awake into the model:
-```{r}
+```{r, warning=FALSE}
 df_sex$Age <- as.factor(df_sex$Age)
 df_sex <- df_sex %>%
   filter(!is.na(Minutes.awake))
 
 newmodel.1 <- glmmTMB(data=df_sex, DiversityScore ~ Age + (1|Name), 
                    family = gaussian("log"))
-summary(newmodel.1)
 
 newmodel.2 <- glmmTMB(data=df_sex, 
                   DiversityScore ~ Age + Sex + (1|Name), 
                    family = gaussian("log"))
-summary(newmodel.2)
 
 newmodel.3 <- glmmTMB(data = df_sex, 
                    DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
                    family = gaussian("log"))
-summary(newmodel.3)
 
 anova(newmodel.1, newmodel.2)
 anova(newmodel.2, newmodel.3)
 anova(newmodel.1, newmodel.3)
 ```
-According to the chi-square test, model.3 is the best model, and minutes awake， age group 2, 3, 6 and 7 are statistically significant variables. Sex is not a statistically significant variable, we can consider removing it in the later model.
+According to the chi-square test, model.3 is the best model, and minutes awake, age group 2, 3, 6 and 7 are statistically significant variables. Sex is not a statistically significant variable, we can consider removing it in the later model.
 
-```{r}
+```{r, warning=FALSE}
 newmodel.4 <- glmmTMB(data = df_sex, 
                    DiversityScore ~ Age + Minutes.awake + (1 | Name),
                    family = gaussian("log"))
 summary(newmodel.4)
 anova(newmodel.4, newmodel.3)
 ```
-According to the chi-square result above, the p-value greater than 0.05, showing that we cannot reject the null hypothesis, and adding variable sex does not signifcantly improve the model performance. We can further check the performance of model 4 using AIC and MSE below.
+According to the chi-square result above, the p-value greater than 0.05, showing that we cannot reject the null hypothesis, and adding variable sex does not significantly improve the model performance. We can further check the performance of model 4 using AIC and MSE below.
+```{r}
+identitymodel.4 <- glmmTMB(data = df_sex, 
+                   DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
+                   family = gaussian("identity"))
+summary(identitymodel.4)
+anova(identitymodel.4, newmodel.3)
+predictions <- predict(identitymodel.4, type = "response")
+mse_identitymodel4 <- mean((df_sex$DiversityScore - predictions)^2)
+```
 
 ## Model Diagnostics for Our Model
-```{r}
+
+### New Model 1
+```{r, echo=FALSE}
 residuals_model <- residuals(newmodel.1, type = "pearson")
 
 # Plot histogram of residuals
@@ -423,7 +370,9 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
      xlab = "Fitted Values", ylab = "Residuals")
 abline(h = 0, col = "red")
 ```
-```{r}
+
+### New Model 2
+```{r, echo=FALSE}
 residuals_model <- residuals(newmodel.2, type = "pearson")
 
 # Plot histogram of residuals
@@ -441,7 +390,9 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
 abline(h = 0, col = "red")
 ```
 
-```{r}
+
+### New Model 3
+```{r, echo=FALSE}
 residuals_model <- residuals(newmodel.3, type = "pearson")
 
 # Plot histogram of residuals
@@ -458,7 +409,9 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
      xlab = "Fitted Values", ylab = "Residuals")
 abline(h = 0, col = "red")
 ```
-```{r}
+
+### New Model 4
+```{r, echo=FALSE}
 residuals_model <- residuals(newmodel.4, type = "pearson")
 
 # Plot histogram of residuals
@@ -476,10 +429,10 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
 abline(h = 0, col = "red")
 ```
 
-By checking the models assumptions, all three of our models satisfy the model assumptions.
+By checking the models assumptions, all four of our models satisfy the model assumptions.
 
 ## Compare Our Model to The Client's Model
-```{r, warning=FALSE}
+```{r, warning=FALSE, echo=FALSE}
 aic_model1 <- AIC(model.1)
 aic_newmodel1 <- AIC(newmodel.1)
 aic_model2 <- AIC(model.2)
@@ -523,46 +476,18 @@ comparison_table <- data.frame(
 # Print the table
 print(comparison_table)
 ```
-
-## compare client's model 1 with our updated model1
-```{r}
-# MSE
-# Our model
-predicted_values_model1 <- predict(model.1, type = "response")
-actual_values <- df_sex$DiversityScore
-MSE_model1 <- mean((actual_values - predicted_values_model1)^2)
-
-# cliet's model
-predicted_values_model1_client <- predict(model.1_client, type = "response")
-actual_values_client <- df_score$DiversityScore
-MSE_model1_client <- mean((actual_values_client - predicted_values_model1_client)^2)
-
-print(MSE_model1)
-print(MSE_model1_client)
-
-# AIC
-print(summary_df)
-print(summary_df_client)
-```
-# remove follow number
-```{r}
-model.1_remove <- glmer(data=df_sex, DiversityScore ~ Age+ (1|Name), family=gaussian(link="log"))
-summary_1remove <- data.frame(Model_Type=c('Gaussian Log No F.E.'), AIC=summary(model.1_remove)$AIC[1], BIC=summary(model.1_remove)$AIC[2])
-
-print(summary_1remove)
-```
-According to the AIC and MSE comparison above, our models have lower AIC and MSE, indicating that our model performs better. Although from the ANOVA table above, adding variable sex does not further improve the model, Model 3 does have smaller MSE but higher AIC compared to model 4.(??)
+According to the AIC and MSE comparison above, our models have lower AIC and MSE, indicating that our model performs better. Although from the ANOVA table above, adding variable sex does not further improve the model, Model 3 does have smaller MSE but higher AIC compared to model 4. In order to achieve simpler model structure, we plan to choose model 4.
 
 
-## Model 3 Performance Using Cross Validation
+## Model 4 Performance Using Cross Validation
 
-To validate the performance of the model 3 above, we propose to use k-fold cross validation:
+To validate the performance of the model 4 above, we propose to use k-fold cross validation:
 ```{r, warning=FALSE}
 # Custom function to fit models
 fit_glmmTMB <- function(train_data, test_data) {
   model <- glmmTMB(
     data = train_data,
-    DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
+    DiversityScore ~ Age + Minutes.awake + (1 | Name),
     family = gaussian(link = "log")
   )
   
@@ -589,25 +514,43 @@ mean_mse <- mean(cv_results)
 cat("Average MSE across folds:", mean_mse, "\n")
 ```
 
-## Refit Model 3 with stan_glmer
+## Fit Model 4 Using Data with Names with Only 1 Observation Removed
+```{r, warning=FALSE}
+df_sex1 <- df_sex %>%
+  group_by(Name) %>%
+  filter(n() > 1) %>%
+  ungroup()
+
+model_remove_name <- glmmTMB(data = df_sex1, 
+                   DiversityScore ~ Age + Minutes.awake + (1 | Name),
+                   family = gaussian("log"))
+predictions <- predict(model_remove_name, type = "response")
+mse_model_remove <- mean((df_sex1$DiversityScore - predictions)^2)
+print(mse_model_remove)
+```
+
+
+## Refit Model 4 with stan_glmer
 ```{r}
-stanmodel_3 <- stan_glmer(
-  DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
+stanmodel_4 <- stan_glmer(
+  DiversityScore ~ Age + Minutes.awake + (1 | Name),
   data = df_sex,
   family = gaussian(link = "log"),
   refresh = 0
 )
 ```
 ```{r}
-predictions <- posterior_predict(stanmodel_3, type = "response")
+predictions <- posterior_predict(stanmodel_4, type = "response")
 mean_prediction <- colMeans(predictions)
-mse_stanmodel3 <- mean((df_sex$DiversityScore - mean_prediction)^2)
-print(mse_stanmodel3)
+mse_stanmodel4 <- mean((df_sex$DiversityScore - mean_prediction)^2)
+print(mse_stanmodel4)
 ```
 
 
 ## Try XGBoost Model
-```{r}
+
+For the next steps, we can also try some machine learning method, such as random forest and xgboost to further improve the modeling performance.
+```{r, include=FALSE}
 # Load necessary libraries
 library(xgboost)
 
@@ -660,8 +603,5 @@ mse <- mean((y_test - y_pred)^2)
 cat("Mean Squared Error (XGBoost):", mse, "\n")
 ```
 
-
-# Conclusion
-In conclusion, we check the assumption of clients' model and optimize the model based on our exploration of data. Firstly we add sex and minutes awake into the independent variables. 
 
 
