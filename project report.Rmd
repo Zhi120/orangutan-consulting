@@ -35,6 +35,16 @@ Each orangutan was observed for a period of time at different times, and the tim
 
 In this report, we will mainly talk about the basic EDA to analyze the data, the methods used to assess the relationship, including the models used, and finally the conclusion based on the results.
 
+# Data
+
+Our dataset is a comprehensive collection of behavioral and demographic data gathered from orangutan individuals across multiple observation sessions. It includes key variables such as Follow Number (a unique identifier for each observation session), Name (the orangutan’s identifier), Minutes awake (the total time an individual was actively observed), Age (measured in years), and a variety of activity metrics that summarize behaviors observed during each session. Additionally, the dataset includes age classification variables , which group individuals into meaningful categories based on their developmental stage or life phase.
+
+Behavioral activity data is detailed in columns labeled with terms like "TotalM," capturing the total minutes spent on specific activities. These metrics provide valuable insights into individual behaviors, enabling the study of activity patterns and their variations with age, session conditions, or other demographic factors.
+
+To ensure the dataset's usability and reliability, extensive cleaning and preprocessing were conducted. Rows marked for exclusion were removed, as were records with insufficient awake time (Minutes awake < 300). Missing values in key columns were addressed to maintain consistency, and activity metrics were normalized relative to total awake time to facilitate comparisons across individuals and sessions. Duplicate records were eliminated, and data from juveniles and adults were processed separately before being merged into a single, cohesive dataset.
+
+This cleaned and structured dataset offers a rich foundation for analyzing individual and group behaviors, exploring diversity patterns, and drawing meaningful conclusions about the relationship between demographic factors and observed activities.
+
 # EDA
 
 The client divided all the ages into 7 groups. In the original dataset, if the age is between 0 to 2, then those orangutans are classified as age level 1; if the age is between 2 to 4, then those orangutans are classified as age level 2; if the age is between 4 to 6, then those orangutans are classified as age level 3; if the age is between 6 to 8, then those orangutans are classified as age level 4; if the age is between 8 to 10, then those orangutans are classified as age level 5; if the age is between 10 to 12, then those orangutans are classified as age level 5. For those with ages greater than 12, they go to the age 7 group. Also, all the minutes awake are greater than 360 minutes.
