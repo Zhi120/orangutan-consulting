@@ -15,6 +15,7 @@ library(Metrics)
 library(rstanarm)
 library(ggplot2)
 library(tidyr)
+library(readxl)
 ```
 
 
@@ -212,24 +213,9 @@ df_sex <- merge(df_sex, df_final_subset, by = c("Name", "FollowNumber"), all.x =
 glimpse(df_sex)
 ```
 
-## Part 6: Standard Deviation of Diversity Score for Each Name Group
-```{r, echo=FALSE}
-summary_name <- df_sex %>%
-  group_by(Name) %>%
-  summarise(count = n(),
-            max = max(DiversityScore),
-            min = min(DiversityScore),
-            median = median(DiversityScore),
-            std = sd(DiversityScore))
-std_na <- summary_name %>%
-  filter(is.na(std))
-print(std_na)
-```
-According to the standard deviation of diversity score in different name group, the name can be treated as a group variable(random effect). Those names in the above table only have 1 observation, we may consider remove those levels.
 
-
-# Method
-## How does Shannon Weaver Index calculate?
+# Modeling and Model Result
+## How does Shannon Weaver Index calculate mathematically?
 
 The formula is shown below:
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
@@ -350,76 +336,8 @@ summary(newmodel.4)
 anova(newmodel.4, newmodel.3)
 ```
 According to the chi-square result above, the p-value greater than 0.05, showing that we cannot reject the null hypothesis, and adding variable sex does not significantly improve the model performance. We can further check the performance of model 4 using AIC and MSE below.
-```{r}
-identitymodel.4 <- glmmTMB(data = df_sex, 
-                   DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
-                   family = gaussian("identity"))
-summary(identitymodel.4)
-anova(identitymodel.4, newmodel.3)
-predictions <- predict(identitymodel.4, type = "response")
-mse_identitymodel4 <- mean((df_sex$DiversityScore - predictions)^2)
-```
 
-## Model Diagnostics for Our Model
-
-### New Model 1
-```{r, echo=FALSE}
-residuals_model <- residuals(newmodel.1, type = "pearson")
-
-# Plot histogram of residuals
-hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
-
-# Q-Q plot to check normality
-qqnorm(residuals_model)
-qqline(residuals_model, col = "red")
-
-fitted_values <- predict(newmodel.1, type = "response")
-
-# Plot residuals vs fitted values
-plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
-     xlab = "Fitted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
-```
-
-### New Model 2
-```{r, echo=FALSE}
-residuals_model <- residuals(newmodel.2, type = "pearson")
-
-# Plot histogram of residuals
-hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
-
-# Q-Q plot to check normality
-qqnorm(residuals_model)
-qqline(residuals_model, col = "red")
-
-fitted_values <- predict(newmodel.2, type = "response")
-
-# Plot residuals vs fitted values
-plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
-     xlab = "Fitted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
-```
-
-
-### New Model 3
-```{r, echo=FALSE}
-residuals_model <- residuals(newmodel.3, type = "pearson")
-
-# Plot histogram of residuals
-hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
-
-# Q-Q plot to check normality
-qqnorm(residuals_model)
-qqline(residuals_model, col = "red")
-
-fitted_values <- predict(newmodel.3, type = "response")
-
-# Plot residuals vs fitted values
-plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
-     xlab = "Fitted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
-```
-
+## Model Diagnostics for Our Model 4
 ### New Model 4
 ```{r, echo=FALSE}
 residuals_model <- residuals(newmodel.4, type = "pearson")
@@ -439,7 +357,7 @@ plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
 abline(h = 0, col = "red")
 ```
 
-By checking the models assumptions, all four of our models satisfy the model assumptions.
+By checking the models assumptions, the model chosen satisfies the model assumptions.
 
 ## Compare Our Model to The Client's Model
 ```{r, warning=FALSE, echo=FALSE}
@@ -524,23 +442,9 @@ mean_mse <- mean(cv_results)
 cat("Average MSE across folds:", mean_mse, "\n")
 ```
 
-## Fit Model 4 Using Data with Names with Only 1 Observation Removed
-```{r, warning=FALSE}
-df_sex1 <- df_sex %>%
-  group_by(Name) %>%
-  filter(n() > 1) %>%
-  ungroup()
-
-model_remove_name <- glmmTMB(data = df_sex1, 
-                   DiversityScore ~ Age + Minutes.awake + (1 | Name),
-                   family = gaussian("log"))
-predictions <- predict(model_remove_name, type = "response")
-mse_model_remove <- mean((df_sex1$DiversityScore - predictions)^2)
-print(mse_model_remove)
-```
 
 
-## Refit Model 4 with stan_glmer
+## Refit Model 4 Using stan_glmer To Validate Performance
 ```{r}
 stanmodel_4 <- stan_glmer(
   DiversityScore ~ Age + Minutes.awake + (1 | Name),
@@ -555,62 +459,43 @@ mean_prediction <- colMeans(predictions)
 mse_stanmodel4 <- mean((df_sex$DiversityScore - mean_prediction)^2)
 print(mse_stanmodel4)
 ```
+By refitting the model using the Bayesian Approach(stan_glmer), we get similar MSE result with glmmTMB, confirming that model 4 is the best model.
 
+# Additional Requirement from The Client
 
-## Try XGBoost Model
+The client also wants to know if there is any correlation between different age groups and the total minutes awake for each positional behaviors. We will start by processing the data first, and the main goal of the data processing is to create a dataframe with rows representing the positional behaviours, and 7 columns representing each of the age group, and each entry in the table represents the total minutes of the positional behaviours for each age group.
+```{r, echo=FALSE}
+df <- read_xlsx("parsed-all.xlsx")
+df$`Age class lookup` <- tolower(df$`Age class lookup`)
+df$`Age Class II lookup` <- tolower(df$`Age Class II lookup`)
+df <- df %>% mutate(Age = case_when(
+      Age >= 0  & Age < 2 ~ '1',
+      Age >= 2  & Age < 4 ~ '2',
+      Age >= 4  & Age < 6 ~ '3',
+      Age >= 6  & Age < 8 ~ '4',
+      Age >= 8  & Age < 10 ~ '5',
+      Age >= 10  & Age < 12 ~ '6',
+      Age >= 12 & grepl('\\badult female\\b', `Age class lookup`) & grepl('\\bnon-mother\\b', `Age Class II lookup`) ~ '7',
+      Age >= 12 & grepl ('\\bflanged male\\b', `Age class lookup`) ~ '7')) %>% select(-contains('Age Class II lookup'))
 
-For the next steps, we can also try some machine learning method, such as random forest and xgboost to further improve the modeling performance.
-```{r, include=FALSE}
-# Load necessary libraries
-library(xgboost)
+df<-df[!is.na(df$Age), ]
+new_table <- df %>%
+  group_by(Age) %>%
+  select(c(Age, names(df[, 7:ncol(df)])))
 
-# Preprocess data
-df_sex_clean <- df_sex %>%
-  mutate(Sex = ifelse(Sex == "Male", 1, 0))
+new_table <- new_table %>%
+  mutate(across(where(is.character), as.numeric))
 
-df_sex_clean <- df_sex_clean %>%
-  mutate(
-    Age = as.numeric(factor(Age)),  # Convert Age to numeric factor
-    Name = as.numeric(factor(Name))  # Convert Name to numeric factor
-  )
-
-# Define predictor matrix (X) and target variable (y)
-X <- as.matrix(df_sex_clean %>% select(-DiversityScore))
-y <- df_sex_clean$DiversityScore
-
-# Split data into training and testing sets
-set.seed(724)
-trainIndex <- createDataPartition(y, p = 0.8, list = FALSE)
-X_train <- X[trainIndex, ]
-X_test <- X[-trainIndex, ]
-y_train <- y[trainIndex]
-y_test <- y[-trainIndex]
-
-# Convert to xgb.DMatrix
-dtrain <- xgb.DMatrix(data = X_train, label = y_train)
-dtest <- xgb.DMatrix(data = X_test, label = y_test)
-
-# Train XGBoost model
-params <- list(
-  objective = "reg:squarederror",  # For regression
-  eta = 0.1,  # Learning rate
-  max_depth = 6,  # Tree depth
-  subsample = 0.8,  # Subsampling ratio
-  colsample_bytree = 0.8  # Feature sampling ratio
-)
-xgb_model <- xgboost(
-  data = dtrain,
-  params = params,
-  nrounds = 100,  # Number of boosting rounds
-  verbose = 1
-)
-
-# Predict on test set
-y_pred <- predict(xgb_model, dtest)
-
-# Evaluate model
-mse <- mean((y_test - y_pred)^2)
-cat("Mean Squared Error (XGBoost):", mse, "\n")
+new_table <- new_table %>%
+  group_by(Age) %>%
+  summarize(across(everything(), sum, na.rm = TRUE))
+flipped_table <- t(new_table)
+flipped_table <- as.data.frame(flipped_table, row.names = NULL)
+colnames(flipped_table) <- paste0("AgeGroup_", seq_len(7))
+flipped_table <- flipped_table[-1,]
+flipped_table <- flipped_table %>%
+  mutate(across(where(is.character), as.numeric))
+flipped_table <- flipped_table[rowSums(flipped_table) > 0, ]
 ```
 
 
