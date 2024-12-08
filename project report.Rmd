@@ -499,4 +499,36 @@ flipped_table <- flipped_table[rowSums(flipped_table) > 0, ]
 ```
 
 
+```{r}
+# Initialize a result matrix
+n <- ncol(flipped_table)
+p_value_matrix <- matrix(NA, nrow = n, ncol = n, dimnames = list(colnames(flipped_table), colnames(flipped_table)))
+
+# Iterate over all columns for pairwise comparisons
+for (i in 1:n) {
+  for (j in 1:n) {
+    if (i != j) {
+      # Perform t-test
+      t_result <- t.test(flipped_table[[i]], flipped_table[[j]], paired = FALSE)
+      # Store the p-value in the matrix
+      p_value_matrix[i, j] <- t_result$p.value
+    }
+  }
+}
+
+# Print the p-value matrix
+
+print(p_value_matrix)
+
+
+```
+The pairwise t-test results compare the mean observed time for different positional behaviors across age groups. All p-values are greater than 0.05, indicating no statistically significant differences in the mean observed time for these  positional behaviors  between any of the age groups. This suggests that the variation in mean observed time across age groups is not substantial enough to be considered statistically significant.
+
+
+
+
+
+
+
+
 
