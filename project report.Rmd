@@ -464,7 +464,7 @@ By refitting the model using the Bayesian Approach(stan_glmer), we get similar M
 # Additional Requirement from The Client
 
 The client also wants to know if there is any correlation between different age groups and the total minutes awake for each positional behaviors. We will start by processing the data first, and the main goal of the data processing is to create a dataframe with rows representing the positional behaviours, and 7 columns representing each of the age group, and each entry in the table represents the total minutes of the positional behaviours for each age group.
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 df <- read_xlsx("parsed-all.xlsx")
 df$`Age class lookup` <- tolower(df$`Age class lookup`)
 df$`Age Class II lookup` <- tolower(df$`Age Class II lookup`)
@@ -498,8 +498,8 @@ flipped_table <- flipped_table %>%
 flipped_table <- flipped_table[rowSums(flipped_table) > 0, ]
 ```
 
-
-```{r}
+After transforming the data, we propose to use two sample t-test to test for the significance of difference between mean of minutes awake between any two age groups. The p-value matrix is shown below:
+```{r, echo=FALSE}
 # Initialize a result matrix
 n <- ncol(flipped_table)
 p_value_matrix <- matrix(NA, nrow = n, ncol = n, dimnames = list(colnames(flipped_table), colnames(flipped_table)))
@@ -516,11 +516,10 @@ for (i in 1:n) {
   }
 }
 
-# Print the p-value matrix
+diag(p_value_matrix) <- 1
 
-print(p_value_matrix)
-
-
+# Print the rounded p-value matrix
+print(round(p_value_matrix, 4))
 ```
 The pairwise t-test results compare the mean observed time for different positional behaviors across age groups. All p-values are greater than 0.05, indicating no statistically significant differences in the mean observed time for these  positional behaviors  between any of the age groups. This suggests that the variation in mean observed time across age groups is not substantial enough to be considered statistically significant.
 
