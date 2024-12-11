@@ -44,7 +44,7 @@ Our dataset is a comprehensive collection of behavioral and demographic data gat
 
 Behavioral activity data is detailed in columns labeled with terms like "TotalM," capturing the total minutes spent on specific activities. These metrics provide valuable insights into individual behaviors, enabling the study of activity patterns and their variations with age, session conditions, or other demographic factors.
 
-To ensure the dataset's usability and reliability, extensive cleaning and preprocessing were conducted. Rows marked for exclusion were removed, as were records with insufficient awake time (Minutes awake \< 300). Missing values in key columns were addressed to maintain consistency, and activity metrics were normalized relative to total awake time to facilitate comparisons across individuals and sessions. Duplicate records were eliminated, and data from juveniles and adults were processed separately before being merged into a single, cohesive dataset.
+To ensure the dataset's usability and reliability, extensive cleaning and preprocessing were conducted. Rows marked for exclusion were removed, as were records with insufficient awake time (Minutes awake \< 360). Missing values in key columns were addressed to maintain consistency, and activity metrics were normalized relative to total awake time to facilitate comparisons across individuals and sessions. Duplicate records were eliminated, and data from juveniles and adults were processed separately before being merged into a single, cohesive dataset.
 
 This cleaned and structured dataset offers a rich foundation for analyzing individual and group behaviors, exploring diversity patterns, and drawing meaningful conclusions about the relationship between demographic factors and observed activities.
 
@@ -510,7 +510,9 @@ new_table <- new_table %>%
 
 new_table <- new_table %>%
   group_by(Age) %>%
-  summarize(across(everything(), sum, na.rm = TRUE))
+  summarize(across(everything(), mean, na.rm = TRUE))
+new_table <- new_table %>%
+  mutate(across(everything(), ~ replace_na(., 0)))
 flipped_table <- t(new_table)
 flipped_table <- as.data.frame(flipped_table, row.names = NULL)
 colnames(flipped_table) <- paste0("AgeGroup_", seq_len(7))
@@ -523,6 +525,7 @@ flipped_table <- flipped_table[rowSums(flipped_table) > 0, ]
 After transforming the data, we propose to use two sample t-test to test for the significance of difference between mean of minutes awake between any two age groups. The p-value matrix is shown below:
 
 ```{r, echo=FALSE}
+# Initialize a result matrix
 # Initialize a result matrix
 n <- ncol(flipped_table)
 p_value_matrix <- matrix(NA, nrow = n, ncol = n, dimnames = list(colnames(flipped_table), colnames(flipped_table)))
@@ -542,7 +545,26 @@ for (i in 1:n) {
 diag(p_value_matrix) <- 1
 
 # Print the rounded p-value matrix
+print("Original P-Value Matrix:")
 print(round(p_value_matrix, 4))
+
+# Flatten the p-value matrix to a vector for adjustment
+raw_p_values <- p_value_matrix[lower.tri(p_value_matrix)]
+
+# Adjust p-values using the Benjamini-Hochberg method
+adjusted_p_values <- p.adjust(raw_p_values, method = "BH")
+
+# Reconstruct the adjusted p-value matrix
+adjusted_p_value_matrix <- matrix(NA, nrow = n, ncol = n, dimnames = list(colnames(flipped_table), colnames(flipped_table)))
+adjusted_p_value_matrix[lower.tri(adjusted_p_value_matrix)] <- adjusted_p_values
+adjusted_p_value_matrix <- t(adjusted_p_value_matrix)
+adjusted_p_value_matrix[lower.tri(adjusted_p_value_matrix)] <- adjusted_p_values
+diag(adjusted_p_value_matrix) <- 1
+
+# Print the adjusted p-value matrix
+print("Adjusted P-Value Matrix:")
+print(round(adjusted_p_value_matrix, 4))
+
 ```
 
 The pairwise t-test results compare the mean observed time for different positional behaviors across age groups. All p-values are greater than 0.05, indicating no statistically significant differences in the mean observed time for these positional behaviors between any of the age groups. This suggests that the variation in mean observed time across age groups is not substantial enough to be considered statistically significant.
