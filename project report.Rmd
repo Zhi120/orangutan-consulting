@@ -1,7 +1,6 @@
 ---
-title: "Consulting Project Report"
+title: "Consulting Project Report: Exploration of relationship between age and diversity score in orangutan behavior"
 author: "Xiaohan Shi, Zihao Zhang, Suheng Yao"
-date: "2024-11-16"
 output: pdf_document
 ---
 
@@ -24,6 +23,7 @@ df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
 df_final <- read.csv("final_data.csv")
 ```
+
 # Abstract
 
 This study examines the positional behaviors of orangutans across developmental stages to explore the relationship between age, gender, awake minutes and behavioral diversity, measured using the Shannon Weaver Index. The dataset consists of 237 orangutans observed over 30 years, with 77 distinct positional behaviors recorded across seven age groups. Exploratory data analysis revealed no significant differences in the mean observed time for positional behaviors between age groups, as all pairwise t-test p-values exceeded 0.05. A series of linear mixed-effect models were developed, incorporating age, sex, and awake time as predictors. The final optimized model indicated that age negatively impacts behavioral diversity, while awake time positively influences it. Sex was not found to be a significant factor. Model diagnostics confirmed the validity of the selected model. Recommendations for future research include exploring alternative link functions, leveraging machine learning techniques, and adopting Bayesian frameworks for further insights. This study provides a statistical foundation for understanding age-related behavioral changes in orangutans and highlights avenues for future exploration.
