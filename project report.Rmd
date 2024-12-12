@@ -1,5 +1,5 @@
 ---
-title: "Consulting Project Report"
+title: "Orangutan Consulting Project Report"
 author: "Xiaohan Shi, Zihao Zhang, Suheng Yao"
 date: "2024-11-16"
 output: pdf_document
@@ -27,7 +27,6 @@ df_final <- read.csv("final_data.csv")
 # Abstract
 
 This study examines the positional behaviors of orangutans across developmental stages to explore the relationship between age, gender, awake minutes and behavioral diversity, measured using the Shannon Weaver Index. The dataset consists of 237 orangutans observed over 30 years, with 77 distinct positional behaviors recorded across seven age groups. Exploratory data analysis revealed no significant differences in the mean observed time for positional behaviors between age groups, as all pairwise t-test p-values exceeded 0.05. A series of linear mixed-effect models were developed, incorporating age, sex, and awake time as predictors. The final optimized model indicated that age negatively impacts behavioral diversity, while awake time positively influences it. Sex was not found to be a significant factor. Model diagnostics confirmed the validity of the selected model. Recommendations for future research include exploring alternative link functions, leveraging machine learning techniques, and adopting Bayesian frameworks for further insights. This study provides a statistical foundation for understanding age-related behavioral changes in orangutans and highlights avenues for future exploration.
-
 
 
 # Introduction
@@ -555,7 +554,7 @@ summary(newmodel.4)
 
 According to the previous evaluation, we choose our new model 4 as the best model to interpret our analysis. As the individual differences in each orangutan were modeled as random effects, age had a significant negative effect on the Diversity_Score, indicating a gradual decrease in behavioral diversity as orangutans age. Minutes_awake has a positive effect on Diversity_Score, indicating that the longer the awake time, the more chance to show diversified behaviors.
 
-For future optimization and exploration, there are three aspect can be condisered. First, current model uses a log link function to address potential non-linear relationships between predictors and the response variable. Future studies could compare this with alternative link functions, such as an identity link, to test whether a simpler transformation improves the model fit. 
+For future optimization and exploration, there are three aspect can be considered. First, current model uses a log link function to address potential non-linear relationships between predictors and the response variable. Future studies could compare this with alternative link functions, such as an identity link, to test whether a simpler transformation improves the model fit. 
 
 Second, advanced machine learning techniques, such as random forest or XGBoost, could be explored to model non-linear relationships and interactions between predictors. 
 
@@ -563,6 +562,7 @@ Third, our study primarily utilized a frequentist approach. The bayesian framewo
 
 
 # Conclusion
+
 In conclusion, this report mainly provides statistical insights, including data exploration, model assumption check and model optimizing. Model evaluation part shows the effect of sex on orangutan behavior diversity scores is not statistically significant and did not improve model performance. The best model suggests that age and awake time are key factors influencing behavioral diversity in orangutans, but individual differences also need to be considered. In addition, we also interpret several areas for future optimization and enhance the analysis.
 
 
