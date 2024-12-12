@@ -1,7 +1,6 @@
 ---
-title: "Orangutan Consulting Project Report"
+title: "Consulting Project Report: Exploration of Relationship Between Age and Diversity Score in Orangutan Behavior"
 author: "Xiaohan Shi, Zihao Zhang, Suheng Yao"
-date: "2024-11-16"
 output: pdf_document
 ---
 
@@ -24,6 +23,7 @@ df_score <- read.csv("diversity_score.csv")
 df_sex <- read.csv("diversity_score_withsex.csv")
 df_final <- read.csv("final_data.csv")
 ```
+
 # Abstract
 
 This study examines the positional behaviors of orangutans across developmental stages to explore the relationship between age, gender, awake minutes and behavioral diversity, measured using the Shannon Weaver Index. The dataset consists of 237 orangutans observed over 30 years, with 77 distinct positional behaviors recorded across seven age groups. Exploratory data analysis revealed no significant differences in the mean observed time for positional behaviors between age groups, as all pairwise t-test p-values exceeded 0.05. A series of linear mixed-effect models were developed, incorporating age, sex, and awake time as predictors. The final optimized model indicated that age negatively impacts behavioral diversity, while awake time positively influences it. Sex was not found to be a significant factor. Model diagnostics confirmed the validity of the selected model. Recommendations for future research include exploring alternative link functions, leveraging machine learning techniques, and adopting Bayesian frameworks for further insights. This study provides a statistical foundation for understanding age-related behavioral changes in orangutans and highlights avenues for future exploration.
@@ -31,7 +31,7 @@ This study examines the positional behaviors of orangutans across developmental 
 
 # Introduction
 
-Our group's project is on the positional behaviors of orangutans. Orangutans are primates that live in the rain forests of Southeast Asia and are known for their red fur and high intelligence. They are also the largest arboreal mammals living in the world. They are found mainly in Borneo and Sumatra and are listed as an endangered species due to habitat loss and threats from illegal hunting. The main objective of this consulting project is to help the client analyze the positional behaviors of orangutans over developmental stages to understand how these behaviors evolve with age. The client used a measurement called Shannor Weaver Index to calculate the diversity score based on the positional behavior and try to find its relationship with age. How Shannor Weaver Index is calculated will be covered more in the method part of the report.
+Our group's project is on the positional behaviors of orangutans. Orangutans are primates that live in the rain forests of Southeast Asia and are known for their red fur and high intelligence. They are also the largest arboreal mammals living in the world. They are found mainly in Borneo and Sumatra and are listed as an endangered species due to habitat loss and threats from illegal hunting. The main objective of this consulting project is to help the client analyze the positional behaviors of orangutans over developmental stages to understand how these behaviors evolve with age. The client used a measurement called Shannon Weaver Index to calculate the diversity score based on the positional behavior and try to find its relationship with age. How Shannon Weaver Index is calculated will be covered more in the method part of the report.
 
 The original data that the client gave us contains 237 individual orangutans that had been followed for 30 years at different periods. Each orangutan was observed for a period of time at different times, and the timing of the behavior at each location was recorded. In total, there are 77 unique positional behaviors recorded for each orangutan. These behaviors are created by the combination of three behavior groups: activity type, body position, and tree position.
 
@@ -43,7 +43,7 @@ Our dataset is a comprehensive collection of behavioral and demographic data gat
 
 Behavioral activity data is detailed in columns labeled with terms like "TotalM," capturing the total minutes spent on specific activities. These metrics provide valuable insights into individual behaviors, enabling the study of activity patterns and their variations with age, session conditions, or other demographic factors.
 
-To ensure the dataset's usability and reliability, extensive cleaning and preprocessing were conducted. Rows marked for exclusion were removed, as were records with insufficient awake time (Minutes awake \< 300). Missing values in key columns were addressed to maintain consistency, and activity metrics were normalized relative to total awake time to facilitate comparisons across individuals and sessions. Duplicate records were eliminated, and data from juveniles and adults were processed separately before being merged into a single, cohesive dataset.
+To ensure the dataset's usability and reliability, extensive cleaning and preprocessing were conducted. Rows marked for exclusion were removed, as were records with insufficient awake time (Minutes awake \< 360). Missing values in key columns were addressed to maintain consistency, and activity metrics were normalized relative to total awake time to facilitate comparisons across individuals and sessions. Duplicate records were eliminated, and data from juveniles and adults were processed separately before being merged into a single, cohesive dataset.
 
 This cleaned and structured dataset offers a rich foundation for analyzing individual and group behaviors, exploring diversity patterns, and drawing meaningful conclusions about the relationship between demographic factors and observed activities.
 
@@ -222,7 +222,7 @@ df_sex <- merge(df_sex, df_final_subset, by = c("Name", "FollowNumber"), all.x =
 glimpse(df_sex)
 ```
 
-# Modeling and Model Result
+# Modeling and Result
 
 ## How does Shannon Weaver Index calculate mathematically?
 
@@ -509,7 +509,9 @@ new_table <- new_table %>%
 
 new_table <- new_table %>%
   group_by(Age) %>%
-  summarize(across(everything(), sum, na.rm = TRUE))
+  summarize(across(everything(), mean, na.rm = TRUE))
+new_table <- new_table %>%
+  mutate(across(everything(), ~ replace_na(., 0)))
 flipped_table <- t(new_table)
 flipped_table <- as.data.frame(flipped_table, row.names = NULL)
 colnames(flipped_table) <- paste0("AgeGroup_", seq_len(7))
@@ -541,7 +543,26 @@ for (i in 1:n) {
 diag(p_value_matrix) <- 1
 
 # Print the rounded p-value matrix
+print("Original P-Value Matrix:")
 print(round(p_value_matrix, 4))
+
+# Flatten the p-value matrix to a vector for adjustment
+raw_p_values <- p_value_matrix[lower.tri(p_value_matrix)]
+
+# Adjust p-values using the Benjamini-Hochberg method
+adjusted_p_values <- p.adjust(raw_p_values, method = "BH")
+
+# Reconstruct the adjusted p-value matrix
+adjusted_p_value_matrix <- matrix(NA, nrow = n, ncol = n, dimnames = list(colnames(flipped_table), colnames(flipped_table)))
+adjusted_p_value_matrix[lower.tri(adjusted_p_value_matrix)] <- adjusted_p_values
+adjusted_p_value_matrix <- t(adjusted_p_value_matrix)
+adjusted_p_value_matrix[lower.tri(adjusted_p_value_matrix)] <- adjusted_p_values
+diag(adjusted_p_value_matrix) <- 1
+
+# Print the adjusted p-value matrix
+print("Adjusted P-Value Matrix(Benjamini-Hochberg method):")
+print(round(adjusted_p_value_matrix, 4))
+
 ```
 
 The pairwise t-test results compare the mean observed time for different positional behaviors across age groups. All p-values are greater than 0.05, indicating no statistically significant differences in the mean observed time for these positional behaviors between any of the age groups. This suggests that the variation in mean observed time across age groups is not substantial enough to be considered statistically significant.
