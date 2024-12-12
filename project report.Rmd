@@ -32,7 +32,7 @@ This study examines the positional behaviors of orangutans across developmental 
 
 # Introduction
 
-Our group's project is on the positional behaviors of orangutans. Orangutans are primates that live in the rain forests of Southeast Asia and are known for their red fur and high intelligence. They are also the largest arboreal mammals living in the world. They are found mainly in Borneo and Sumatra and are listed as an endangered species due to habitat loss and threats from illegal hunting. The main objective of this consulting project is to help the client analyze the positional behaviors of orangutans over developmental stages to understand how these behaviors evolve with age. The client used a measurement called Shannor Weaver Index to calculate the diversity score based on the positional behavior and try to find its relationship with age. How Shannor Weaver Index is calculated will be covered more in the method part of the report.
+Our group's project is on the positional behaviors of orangutans. Orangutans are primates that live in the rain forests of Southeast Asia and are known for their red fur and high intelligence. They are also the largest arboreal mammals living in the world. They are found mainly in Borneo and Sumatra and are listed as an endangered species due to habitat loss and threats from illegal hunting. The main objective of this consulting project is to help the client analyze the positional behaviors of orangutans over developmental stages to understand how these behaviors evolve with age. The client used a measurement called Shannon Weaver Index to calculate the diversity score based on the positional behavior and try to find its relationship with age. How Shannon Weaver Index is calculated will be covered more in the method part of the report.
 
 The original data that the client gave us contains 237 individual orangutans that had been followed for 30 years at different periods. Each orangutan was observed for a period of time at different times, and the timing of the behavior at each location was recorded. In total, there are 77 unique positional behaviors recorded for each orangutan. These behaviors are created by the combination of three behavior groups: activity type, body position, and tree position.
 
@@ -526,7 +526,6 @@ After transforming the data, we propose to use two sample t-test to test for the
 
 ```{r, echo=FALSE}
 # Initialize a result matrix
-# Initialize a result matrix
 n <- ncol(flipped_table)
 p_value_matrix <- matrix(NA, nrow = n, ncol = n, dimnames = list(colnames(flipped_table), colnames(flipped_table)))
 
@@ -562,7 +561,7 @@ adjusted_p_value_matrix[lower.tri(adjusted_p_value_matrix)] <- adjusted_p_values
 diag(adjusted_p_value_matrix) <- 1
 
 # Print the adjusted p-value matrix
-print("Adjusted P-Value Matrix:")
+print("Adjusted P-Value Matrix(Benjamini-Hochberg method):")
 print(round(adjusted_p_value_matrix, 4))
 
 ```
