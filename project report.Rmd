@@ -231,7 +231,6 @@ The formula is shown below: $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$ In this formula,
 ## Client Models
 
 Following client suggestions, we would like to use linear mixed effect models and build upon client's models and see if we improve the client's models. Initial client models are listed below:
-
 ```{r}
 model.1 <- glmmTMB(data=df_score, 
                    DiversityScore ~  (1|Name) + (1|FollowNumber),
@@ -247,77 +246,10 @@ model.3 <- glmmTMB(data=df_score,
                    family=gaussian(link="log"))
 ```
 
-## Check Client's Model Assumptions
-
-We first need to check all the linear assumptions are met:
-
-### Model 1
-
-```{r, echo=FALSE}
-residuals_model <- residuals(model.1, type = "pearson")
-
-# Plot histogram of residuals
-hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
-
-# Q-Q plot to check normality
-qqnorm(residuals_model)
-qqline(residuals_model, col = "red")
-
-fitted_values <- predict(model.1, type = "response")
-
-# Plot residuals vs fitted values
-plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
-     xlab = "Fitted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
-```
-
-### Model 2
-
-```{r, echo=FALSE}
-residuals_model <- residuals(model.2, type = "pearson")
-
-# Plot histogram of residuals
-hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
-
-# Q-Q plot to check normality
-qqnorm(residuals_model)
-qqline(residuals_model, col = "red")
-
-fitted_values <- predict(model.2, type = "response")
-
-# Plot residuals vs fitted values
-plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
-     xlab = "Fitted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
-```
-
-### Model 3
-
-```{r, echo=FALSE}
-residuals_model <- residuals(model.3, type = "pearson")
-
-# Plot histogram of residuals
-hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
-
-# Q-Q plot to check normality
-qqnorm(residuals_model)
-qqline(residuals_model, col = "red")
-
-fitted_values <- predict(model.3, type = "response")
-
-# Plot residuals vs fitted values
-plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
-     xlab = "Fitted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
-```
-
-Based on the assumptions check above, all three models have normal distributed residuals, no-heavy tails in qq plot and random distribution in residual vs fitted plot, indicating that all the models satisfy linear assumptions.
-
 ## Build Upon Client's Model
 
-Here we propose three new models building upon the client models, we treat age as a categorical variable, and we also add sex and minutes.awake into the model:
-
-```{r, warning=FALSE}
+Here we propose three new models building upon the client models, we treat age as a categorical variable, and based on the plots shown in EDA part, sex could be an important variable, we can add interaction term between sex and age, and the variable minutes.awake into the model:
+```{r, warning=FALSE, message=FALSE}
 df_sex$Age <- as.factor(df_sex$Age)
 df_sex <- df_sex %>%
   filter(!is.na(Minutes.awake))
@@ -326,58 +258,25 @@ newmodel.1 <- glmmTMB(data=df_sex, DiversityScore ~ Age + (1|Name),
                    family = gaussian("log"))
 
 newmodel.2 <- glmmTMB(data=df_sex, 
-                  DiversityScore ~ Age + Sex + (1|Name), 
+                  DiversityScore ~ Age*Sex + (1|Name), 
                    family = gaussian("log"))
 
 newmodel.3 <- glmmTMB(data = df_sex, 
-                   DiversityScore ~ Age + Sex + Minutes.awake + (1 | Name),
+                   DiversityScore ~ Age*Sex + Minutes.awake + (1 | Name),
+                   family = gaussian("log"))
+
+newmodel.4 <- glmmTMB(data = df_sex, 
+                   DiversityScore ~ Age + Minutes.awake + (1 | Name),
                    family = gaussian("log"))
 
 anova(newmodel.1, newmodel.2)
 anova(newmodel.2, newmodel.3)
 anova(newmodel.1, newmodel.3)
-```
-
-According to the chi-square test, model.3 is the best model, and minutes awake, age group 2, 3, 6 and 7 are statistically significant variables. Sex is not a statistically significant variable, we can consider removing it in the later model.
-
-```{r, warning=FALSE}
-newmodel.4 <- glmmTMB(data = df_sex, 
-                   DiversityScore ~ Age + Minutes.awake + (1 | Name),
-                   family = gaussian("log"))
-summary(newmodel.4)
 anova(newmodel.4, newmodel.3)
 ```
-
-According to the chi-square result above, the p-value greater than 0.05, showing that we cannot reject the null hypothesis, and adding variable sex does not significantly improve the model performance. We can further check the performance of model 4 using AIC and MSE below.
-
-
-
-## Model Diagnostics for Our Model 4
-
-### New Model 4
-
-```{r, echo=FALSE}
-residuals_model <- residuals(newmodel.4, type = "pearson")
-
-# Plot histogram of residuals
-hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
-
-# Q-Q plot to check normality
-qqnorm(residuals_model)
-qqline(residuals_model, col = "red")
-
-fitted_values <- predict(newmodel.4, type = "response")
-
-# Plot residuals vs fitted values
-plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
-     xlab = "Fitted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
-```
-
-By checking the models assumptions, the model chosen satisfies the model assumptions.
+According to the chi-square test, newmodel.3 is the best model, we can further check the performance of newmodel.3 using AIC and MSE below.
 
 ## Compare Our Model to The Client's Model
-
 ```{r, warning=FALSE, echo=FALSE}
 aic_model1 <- AIC(model.1)
 aic_newmodel1 <- AIC(newmodel.1)
@@ -422,19 +321,17 @@ comparison_table <- data.frame(
 # Print the table
 print(comparison_table)
 ```
+According to the AIC and MSE comparison above, our models have lower AIC and MSE, indicating that our model performs better. Also, based on this comparison table, among our models, our model 3 have both lowest AIC and MSE, meaning it is the best model.
 
-According to the AIC and MSE comparison above, our models have lower AIC and MSE, indicating that our model performs better. Although from the ANOVA table above, adding variable sex does not further improve the model, Model 3 does have smaller MSE but higher AIC compared to model 4. In order to achieve simpler model structure, we plan to choose model 4.
+## Our Model 3 Performance Using Cross Validation
 
-## Model 4 Performance Using Cross Validation
-
-To validate the performance of the model 4 above, we propose to use k-fold cross validation:
-
-```{r, warning=FALSE}
+To validate the performance of the model 3 above, we propose to use k-fold cross validation:
+```{r, warning=FALSE, message=FALSE}
 # Custom function to fit models
 fit_glmmTMB <- function(train_data, test_data) {
   model <- glmmTMB(
     data = train_data,
-    DiversityScore ~ Age + Minutes.awake + (1 | Name),
+    DiversityScore ~ Age*Sex + Minutes.awake + (1 | Name),
     family = gaussian(link = "log")
   )
   
@@ -461,11 +358,10 @@ mean_mse <- mean(cv_results)
 cat("Average MSE across folds:", mean_mse, "\n")
 ```
 
-## Refit Model 4 Using stan_glmer To Validate Performance
-
-```{r}
-stanmodel_4 <- stan_glmer(
-  DiversityScore ~ Age + Minutes.awake + (1 | Name),
+## Refit Model 3 Using stan_glmer To Validate Performance
+```{r, message=FALSE}
+stanmodel_3 <- stan_glmer(
+  DiversityScore ~ Age*Sex + Minutes.awake + (1 | Name),
   data = df_sex,
   family = gaussian(link = "log"),
   refresh = 0
@@ -473,13 +369,13 @@ stanmodel_4 <- stan_glmer(
 ```
 
 ```{r}
-predictions <- posterior_predict(stanmodel_4, type = "response")
+predictions <- posterior_predict(stanmodel_3, type = "response")
 mean_prediction <- colMeans(predictions)
-mse_stanmodel4 <- mean((df_sex$DiversityScore - mean_prediction)^2)
-print(mse_stanmodel4)
+mse_stanmodel3 <- mean((df_sex$DiversityScore - mean_prediction)^2)
+print(mse_stanmodel3)
 ```
+By refitting the model using the Bayesian Approach(stan_glmer), we get similar MSE result with glmmTMB, confirming that model 3 is the best model.
 
-By refitting the model using the Bayesian Approach(stan_glmer), we get similar MSE result with glmmTMB, confirming that model 4 is the best model.
 
 # Additional Requirement from The Client
 
@@ -568,12 +464,31 @@ print(round(adjusted_p_value_matrix, 4))
 The pairwise t-test results compare the mean observed time for different positional behaviors across age groups. All p-values are greater than 0.05, indicating no statistically significant differences in the mean observed time for these positional behaviors between any of the age groups. This suggests that the variation in mean observed time across age groups is not substantial enough to be considered statistically significant.
 
 
-# Result and Discussion
+# Result
 ```{r}
-summary(newmodel.4)
+summary(newmodel.3)
 ```
+According to the previous evaluation, we choose our new model 3 as the best model to interpret our analysis. The interpretation of model's output is written below:
 
-According to the previous evaluation, we choose our new model 4 as the best model to interpret our analysis. As the individual differences in each orangutan were modeled as random effects, age had a significant negative effect on the Diversity_Score, indicating a gradual decrease in behavioral diversity as orangutans age. Minutes_awake has a positive effect on Diversity_Score, indicating that the longer the awake time, the more chance to show diversified behaviors.
+For the random effect, the standard deviation of random intercept of 71 name groups is 0.2689, and the variance is 0.0723.
+
+The residuals, which is the unexplained variation after accounting for fixed and random effects, have standard deviation 0.4204 and variance 0.1768.
+
+For coefficients of the fixed effects, I will only interpret those variables that are statistically significant:
+
+**Age6(-0.1974)**: Holding all other variables constant, compared with age group 1, the mean diversity score of age group 6 is expected to decrease by 0.1974.
+
+**Age7(-0.2507)**: Holding all other variables constant, compared with age group 1, the mean diversity score of age group 7 is expected to decrease by 0.2507.
+
+**SexM(-0.3857)**: Holding all other variables constant, compared with female orangutans, the mean diversity score of male orangutans is expected to decrease by 0.3857.
+
+**Minutes Awake(0.0002346)**: Holding all other variables constant, one more minutes awake for orangutan, its diversity score is expected to increase by 0.0002346.
+
+For the coefficient of the interaction term, I will only interpret one of them because all the interpretation are very similar.
+
+**Age7:SexM(0.6123)**: Holding all other variables constant, for age group 7, the mean diversity score is expected to have an additional increase of 0.6123 for male orangutan group compared with female orangutan group. In other words, in age group 7, the difference of mean diversity score between male and female group is further reduced by 0.6123.
+
+# Discussion
 
 For future optimization and exploration, there are three aspect can be considered. First, current model uses a log link function to address potential non-linear relationships between predictors and the response variable. Future studies could compare this with alternative link functions, such as an identity link, to test whether a simpler transformation improves the model fit. 
 
@@ -586,4 +501,100 @@ Third, our study primarily utilized a frequentist approach. The bayesian framewo
 
 In conclusion, this report mainly provides statistical insights, including data exploration, model assumption check and model optimizing. Model evaluation part shows the effect of sex on orangutan behavior diversity scores is not statistically significant and did not improve model performance. The best model suggests that age and awake time are key factors influencing behavioral diversity in orangutans, but individual differences also need to be considered. In addition, we also interpret several areas for future optimization and enhance the analysis.
 
+\newpage
 
+# Appendix
+## Check Client's Model Assumptions
+
+We first need to check all the linear assumptions are met:
+
+### Model 1
+
+```{r, echo=FALSE}
+par(mfrow = c(2, 2))
+residuals_model <- residuals(model.1, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(model.1, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+par(mfrow = c(1, 1))
+```
+
+### Model 2
+```{r, echo=FALSE}
+par(mfrow = c(2, 2))
+residuals_model <- residuals(model.2, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(model.2, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+par(mfrow = c(1, 1))
+```
+
+### Model 3
+```{r, echo=FALSE}
+par(mfrow = c(2, 2))
+residuals_model <- residuals(model.3, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(model.3, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+par(mfrow = c(1, 1))
+```
+
+Based on the assumptions check above, all three models have normal distributed residuals, no-heavy tails in qq plot and random distribution in residual vs fitted plot, indicating that all the models satisfy linear assumptions.
+
+## Model Diagnostics for Our Model 3
+### New Model 3
+
+```{r, echo=FALSE}
+par(mfrow = c(2, 2))
+residuals_model <- residuals(newmodel.3, type = "pearson")
+
+# Plot histogram of residuals
+hist(residuals_model, main = "Histogram of Residuals", xlab = "Residuals")
+
+# Q-Q plot to check normality
+qqnorm(residuals_model)
+qqline(residuals_model, col = "red")
+
+fitted_values <- predict(newmodel.3, type = "response")
+
+# Plot residuals vs fitted values
+plot(fitted_values, residuals_model, main = "Residuals vs Fitted Values",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+par(mfrow = c(1, 1))
+```
+
+By checking the models assumptions, the model chosen satisfies the model assumptions.
