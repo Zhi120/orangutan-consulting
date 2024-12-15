@@ -15,6 +15,7 @@ library(rstanarm)
 library(ggplot2)
 library(tidyr)
 library(readxl)
+library(loo)
 ```
 
 ```{r, echo=FALSE}
@@ -374,8 +375,11 @@ mean_prediction <- colMeans(predictions)
 mse_stanmodel3 <- mean((df_sex$DiversityScore - mean_prediction)^2)
 print(mse_stanmodel3)
 ```
-By refitting the model using the Bayesian Approach(stan_glmer), we get similar MSE result with glmmTMB, confirming that model 3 is the best model.
-
+```{r, warning=FALSE, message=FALSE}
+waic_results <- waic(stanmodel_3)
+print(waic_results)
+```
+By refitting the model using the Bayesian Approach(stan_glmer), we get similar MSE result with glmmTMB, confirming that model 3 is the best model. Also, we used WAIC to assess the goodness of fit of this Bayesian version of model 3. WAIC stands for Widely Applicable Information Criterion, it directly utilizes the posterior distribution of the Bayesian model parameters to calculate the expected log predictive density, hence, making it a robust metric of how well the model generalizes to new data. Additionally, compared with AIC and BIC with more restrictive assumptions, WAIC works better with non-linear and hierarchical models.
 
 # Additional Requirement from The Client
 
@@ -476,17 +480,17 @@ The residuals, which is the unexplained variation after accounting for fixed and
 
 For coefficients of the fixed effects, I will only interpret those variables that are statistically significant:
 
-**Age6(-0.1974)**: Holding all other variables constant, compared with age group 1, the mean diversity score of age group 6 is expected to decrease by 0.1974.
+**Age6(-0.1974)**: Holding all other variables constant, compared with age group 1, the log of mean diversity score of age group 6 is expected to decrease by 0.1974.
 
-**Age7(-0.2507)**: Holding all other variables constant, compared with age group 1, the mean diversity score of age group 7 is expected to decrease by 0.2507.
+**Age7(-0.2507)**: Holding all other variables constant, compared with age group 1, the log of mean diversity score of age group 7 is expected to decrease by 0.2507.
 
-**SexM(-0.3857)**: Holding all other variables constant, compared with female orangutans, the mean diversity score of male orangutans is expected to decrease by 0.3857.
+**SexM(-0.3857)**: Holding all other variables constant, compared with female orangutans, the  log of mean diversity score of male orangutans is expected to decrease by 0.3857.
 
-**Minutes Awake(0.0002346)**: Holding all other variables constant, one more minutes awake for orangutan, its diversity score is expected to increase by 0.0002346.
+**Minutes Awake(0.0002346)**: Holding all other variables constant, one more minutes awake for orangutan, its log of diversity score is expected to increase by 0.0002346.
 
 For the coefficient of the interaction term, I will only interpret one of them because all the interpretation are very similar.
 
-**Age7:SexM(0.6123)**: Holding all other variables constant, for age group 7, the mean diversity score is expected to have an additional increase of 0.6123 for male orangutan group compared with female orangutan group. In other words, in age group 7, the difference of mean diversity score between male and female group is further reduced by 0.6123.
+**Age7:SexM(0.6123)**: Holding all other variables constant, for age group 7, the log of mean diversity score is expected to have an additional increase of 0.6123 for male orangutan group compared with female orangutan group. In other words, in age group 7, the difference of log of mean diversity score between male and female group is further reduced by 0.6123.
 
 # Discussion
 
@@ -499,7 +503,7 @@ Third, our study primarily utilized a frequentist approach. The bayesian framewo
 
 # Conclusion
 
-In conclusion, this report mainly provides statistical insights, including data exploration, model assumption check and model optimizing. Model evaluation part shows the effect of sex on orangutan behavior diversity scores is not statistically significant and did not improve model performance. The best model suggests that age and awake time are key factors influencing behavioral diversity in orangutans, but individual differences also need to be considered. In addition, we also interpret several areas for future optimization and enhance the analysis.
+In conclusion, this report mainly provides statistical insights, including data exploration, model assumption check and model optimizing. The best model suggests that orangutan's age group 6, group 7, orangutan's sex, the interaction term between age and sex, along with total minutes awake are key factors influencing behavioral diversity in orangutans. In addition, we also interpret several areas for future optimization and enhance the analysis.
 
 \newpage
 
